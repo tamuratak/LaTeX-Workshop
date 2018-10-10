@@ -81,9 +81,11 @@ export class EnvPair {
         let lineNumber = pos.line
         let nested = 0
         let line = doc.lineAt(lineNumber).text
+        let base = 0
         /* Drop the pattern on the current line */
         if (dir === 1) {
-            line = line.slice(line.indexOf('}', pos.character) + 1)
+            base = line.indexOf('}', pos.character) + 1
+            line = line.slice(base)
         } else if (dir === -1) {
             line = line.slice(0, pos.character)
         }
@@ -99,7 +101,7 @@ export class EnvPair {
                 }
                 if ((m[1] === 'end' && dir === 1) || (m[1] === 'begin' && dir === -1))  {
                     if (nested === 0) {
-                        const matchPos = new vscode.Position(lineNumber, m.index + 1)
+                        const matchPos = new vscode.Position(lineNumber, base + m.index + 1)
                         const matchName = m[2]
                         const matchType = m[1]
                         return {name: matchName, type: matchType, pos: matchPos}
@@ -112,6 +114,7 @@ export class EnvPair {
                 break
             }
             line = doc.lineAt(lineNumber).text
+            base = 0
         }
         return null
     }

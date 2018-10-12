@@ -14,22 +14,13 @@ export class HoverProvider implements vscode.HoverProvider {
     Thenable<vscode.Hover> {
         return new Promise((resolve, _reject) => {
             const configuration = vscode.workspace.getConfiguration('latex-workshop')
-            const hov = configuration.get('hoverPreview.enabled') as boolean
-            if (hov && this.extension.panel) {
+            const h = configuration.get('hoverPreview.enabled') as boolean
+            if (h && this.extension.panel) {
                 const tr = this.findHoverOnTex(document, position)
                 if (tr) {
-                    const scale = configuration.get('hoverPreview.scale') as number
                     const [tex, range] = tr
-                    const panel = this.extension.panel
-                    const d = panel.webview.onDidReceiveMessage( message => {
-                        resolve( new vscode.Hover(new vscode.MarkdownString( "![equation](" + message.dataurl + ")" ), range ) )
-                        d.dispose()
-                    })
-                    panel.webview.postMessage({
-                        text: tex,
-                        scale: scale,
-                        need_dataurl: "1"
-                    })
+                    this.provideHoverPreview(tex, range)
+                    .then( (hover) => { resolve(hover) } )
                     return
                 }
             }
@@ -51,6 +42,23 @@ export class HoverProvider implements vscode.HoverProvider {
                 return
             }
             resolve()
+        })
+    }
+
+    private provideHoverPreview(tex: string, range: vscode.Range) : Promise<vscode.Hover> {
+        const configuration = vscode.workspace.getConfiguration('latex-workshop')
+        const scale = configuration.get('hoverPreview.scale') as number
+        return new Promise((resolve, _reject) => {
+            const panel = this.extension.panel
+            const d = panel.webview.onDidReceiveMessage( message => {
+                resolve( new vscode.Hover(new vscode.MarkdownString( "![equation](" + message.dataurl + ")" ), range ) )
+                d.dispose()
+            })
+            panel.webview.postMessage({
+                text: tex,
+                scale: scale,
+                need_dataurl: "1"
+            })
         })
     }
 

@@ -3,13 +3,15 @@ import * as envpair from '../components/envpair'
 import {Extension} from '../main'
 import {tokenizer} from './tokenizer'
 
-type Option = { render_label?: boolean }
+type HoverPreviewOption = { render_label?: boolean }
 
 export class HoverProvider implements vscode.HoverProvider {
     extension: Extension
+    envBeginPat: RegExp
 
     constructor(extension: Extension) {
         this.extension = extension
+        this.envBeginPat = /\\begin\{(align|align\*|alignat|alignat\*|aligned|alignedat|array|Bmatrix|bmatrix|cases|CD|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*|gathered|matrix|multline|multline\*|pmatrix|smallmatrix|split|subarray|Vmatrix|vmatrix)\}/
     }
 
     public provideHover(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken) :
@@ -32,22 +34,23 @@ export class HoverProvider implements vscode.HoverProvider {
                 return
             }
             if (token in this.extension.completer.reference.referenceData) {
-                const d = this.extension.completer.reference.referenceData[token]
-                const pat = /\\begin\{(align|align\*|alignat|alignat\*|aligned|alignedat|array|Bmatrix|bmatrix|cases|CD|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*|gathered|matrix|multline|multline\*|pmatrix|smallmatrix|split|subarray|Vmatrix|vmatrix)\}/
-                let beginPos = this.findBeginPair(document, pat, d.item.position)
-                if (beginPos && this.extension.panel) {
-                    const tr = this.findHoverOnTex(document, beginPos, {render_label:true})
-                    if (tr) {
-                        const tex = tr[0]
-                        const e = new vscode.Position(position.line, position.character + '\\label{}'.length)
-                        const range = new vscode.Range(position, e)
-                        this.provideHoverPreview(tex, range)
-                        .then( (hov) => { resolve(hov) })
-                        return
+                const refData = this.extension.completer.reference.referenceData[token]
+                if (configuration.get('hoverPreview.ref.enabled') as boolean) {
+                    let beginPos = this.findBeginPair(document, this.envBeginPat, refData.item.position)
+                    if (beginPos && this.extension.panel) {
+                        const tr = this.findHoverOnTex(document, beginPos, {render_label:true})
+                        if (tr) {
+                            const tex = tr[0]
+                            const e = new vscode.Position(position.line, position.character + '\\label{}'.length + token.length)
+                            const range = new vscode.Range(position, e)
+                            this.provideHoverPreview(tex, range)
+                            .then( (hov) => { resolve(hov) })
+                            return
+                        }
                     }
                 }
                 resolve(new vscode.Hover(
-                    {language: 'latex', value: this.extension.completer.reference.referenceData[token].text }
+                    {language: 'latex', value: refData.text }
                 ))
                 return
             }
@@ -112,7 +115,7 @@ export class HoverProvider implements vscode.HoverProvider {
         return document.getText(range)
     }
 
-    private mathjaxify(tex: string, envname: string, opt: Option ={}) : string {
+    private mathjaxify(tex: string, envname: string, opt: HoverPreviewOption={}) : string {
         // remove TeX comments
         let s = tex.replace(/^\s*%.*\r?\n/mg, '')
         s = s.replace(/^((?:\\.|[^%])*).*$/mg, '$1')
@@ -128,11 +131,10 @@ export class HoverProvider implements vscode.HoverProvider {
         return s
     }
 
-    private findHoverOnTex(document: vscode.TextDocument, position: vscode.Position, opt: Option = {}) : [string, vscode.Range] | undefined {
-        const envBeginPat = /\\begin\{(align|align\*|alignat|alignat\*|aligned|alignedat|array|Bmatrix|bmatrix|cases|CD|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*|gathered|matrix|multline|multline\*|pmatrix|smallmatrix|split|subarray|Vmatrix|vmatrix)\}/
-        let r = document.getWordRangeAtPosition(position, envBeginPat)
+    private findHoverOnTex(document: vscode.TextDocument, position: vscode.Position, opt: HoverPreviewOption={}) : [string, vscode.Range] | undefined {
+        let r = document.getWordRangeAtPosition(position, this.envBeginPat)
         if (r) {
-            const envname = this.getFirstRmemberedSubstring(document.getText(r), envBeginPat)
+            const envname = this.getFirstRmemberedSubstring(document.getText(r), this.envBeginPat)
             return this.findHoverOnEnv(document, envname, r.start, opt)
         }
         const parenBeginPat = /(\\\[|\\\()/
@@ -183,7 +185,7 @@ export class HoverProvider implements vscode.HoverProvider {
     //  \begin{...}                \end{...}
     //  ^                          ^
     //  return pos                 endPos1
-    private findBeginPair(document: vscode.TextDocument, beginPat: RegExp, endPos1: vscode.Position, limit = 20) : vscode.Position | undefined {
+    private findBeginPair(document: vscode.TextDocument, beginPat: RegExp, endPos1: vscode.Position, limit=20) : vscode.Position | undefined {
         const current_line = document.lineAt(endPos1).text.substr(0, endPos1.character)
         const l = this.removeComment(current_line)
         let m  = l.match(beginPat)
@@ -209,7 +211,7 @@ export class HoverProvider implements vscode.HoverProvider {
     //  \begin{...}                \end{...}
     //  ^
     //  startPos
-    private findHoverOnEnv(document: vscode.TextDocument, envname: string, startPos: vscode.Position, opt: Option = {}) : [string, vscode.Range] | undefined {
+    private findHoverOnEnv(document: vscode.TextDocument, envname: string, startPos: vscode.Position, opt: HoverPreviewOption={}) : [string, vscode.Range] | undefined {
         const pattern = new RegExp('\\\\end\\{' + envpair.escapeRegExp(envname) + '\\}')
         const startPos1 = new vscode.Position(startPos.line, startPos.character + envname.length + '\\begin{}'.length)
         const endPos = this.findEndPair(document, pattern, startPos1)

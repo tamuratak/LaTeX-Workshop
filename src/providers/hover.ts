@@ -3,7 +3,7 @@ import * as envpair from '../components/envpair'
 import {Extension} from '../main'
 import {tokenizer} from './tokenizer'
 
-type HoverPreviewOption = { render_label?: boolean }
+type HoverPreviewOption = { render_label?: boolean, render_tabular?: boolean }
 
 export class HoverProvider implements vscode.HoverProvider {
     extension: Extension
@@ -12,7 +12,7 @@ export class HoverProvider implements vscode.HoverProvider {
 
     constructor(extension: Extension) {
         this.extension = extension
-        this.envBeginPat = /\\begin\{(align|align\*|alignat|alignat\*|aligned|alignedat|array|Bmatrix|bmatrix|cases|CD|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*|gathered|matrix|multline|multline\*|pmatrix|smallmatrix|split|subarray|Vmatrix|vmatrix)\}/
+        this.envBeginPat = /\\begin\{(align|align\*|alignat|alignat\*|aligned|alignedat|array|Bmatrix|bmatrix|cases|CD|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*|gathered|matrix|multline|multline\*|pmatrix|smallmatrix|split|subarray|tabular|Vmatrix|vmatrix)\}/
         this.envBeginPatMathMode = /\\begin\{(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)\}/
     }
 
@@ -21,8 +21,10 @@ export class HoverProvider implements vscode.HoverProvider {
         return new Promise((resolve, _reject) => {
             const configuration = vscode.workspace.getConfiguration('latex-workshop')
             const h = configuration.get('hoverPreview.enabled') as boolean
+            const t = configuration.get('hoverPreview.tabular.enabled') as boolean
+            const opt:HoverPreviewOption = t ? {render_tabular:true} : {}
             if (h && this.extension.panel) {
-                const tr = this.findHoverOnTex(document, position)
+                const tr = this.findHoverOnTex(document, position, opt)
                 if (tr) {
                     const [tex, range] = tr
                     this.provideHoverPreview(tex, range)
@@ -141,6 +143,28 @@ export class HoverProvider implements vscode.HoverProvider {
             s = s.replace(/\\label\{(.*?)\}/g, '\\tag{$1}')
         }else{
             s = s.replace(/\\label\{.*?\}/g, '')
+        }
+        //
+        // MathJax does not support \hline
+        s = s.replace(/^(\\hline|[ \t])+\r?\n/mg, '')
+        s = s.replace(/\\hline/g, ' ')
+        if (envname == 'tabular' && opt.render_tabular) {
+            let a = s.split('\n')
+            s = ''
+            for (let i in a) {
+                let l = a[i]
+                let m: RegExpMatchArray | null
+                if (l.match(/\\(begin|end)\{tabular\}/)) {
+                    s += l
+                    continue
+                }
+                while (m = l.match(/^((?:\\.|[^&])*)&/)) {
+                  s += '\\text{' + m[1] + '} &'
+                  l = l.substring(m[0].length)
+                }
+                s += '\\text{' + l.replace(/\\\\/, '} \\\\')
+            }
+            s = s.replace(/\\(begin|end)\{tabular\}/g, '\\$1{array}')
         }
         if (envname.match(/^(aligned|alignedat|array|Bmatrix|bmatrix|cases|CD|gathered|matrix|pmatrix|smallmatrix|split|subarray|Vmatrix|vmatrix)$/)) {
             s = '\\begin{equation}' + s + '\\end{equation}'

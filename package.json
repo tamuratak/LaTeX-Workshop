@@ -815,6 +815,11 @@
           "type": "boolean",
           "default": false,
           "description": "Render Hover Preview on \\ref."
+        },
+        "latex-workshop.hoverPreview.tabular.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Render Hover Preview on \\tabular."
         }
       }
     },

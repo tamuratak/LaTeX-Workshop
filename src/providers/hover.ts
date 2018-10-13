@@ -8,10 +8,12 @@ type HoverPreviewOption = { render_label?: boolean }
 export class HoverProvider implements vscode.HoverProvider {
     extension: Extension
     envBeginPat: RegExp
+    envBeginPatMathMode: RegExp
 
     constructor(extension: Extension) {
         this.extension = extension
         this.envBeginPat = /\\begin\{(align|align\*|alignat|alignat\*|aligned|alignedat|array|Bmatrix|bmatrix|cases|CD|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*|gathered|matrix|multline|multline\*|pmatrix|smallmatrix|split|subarray|Vmatrix|vmatrix)\}/
+        this.envBeginPatMathMode = /\\begin\{(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)\}/
     }
 
     public provideHover(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken) :
@@ -36,17 +38,12 @@ export class HoverProvider implements vscode.HoverProvider {
             if (token in this.extension.completer.reference.referenceData) {
                 const refData = this.extension.completer.reference.referenceData[token]
                 if (configuration.get('hoverPreview.ref.enabled') as boolean) {
-                    let beginPos = this.findBeginPair(document, this.envBeginPat, refData.item.position)
-                    if (beginPos && this.extension.panel) {
-                        const tr = this.findHoverOnTex(document, beginPos, {render_label:true})
-                        if (tr) {
-                            const tex = tr[0]
-                            const e = new vscode.Position(position.line, position.character + '\\label{}'.length + token.length)
-                            const range = new vscode.Range(position, e)
-                            this.provideHoverPreview(tex, range)
-                            .then( (hov) => { resolve(hov) })
-                            return
-                        }
+                    const tr = this.findHoverOnRef(document, position, token, refData.item.position)
+                    if (tr) {
+                        const [tex, range] = tr
+                        this.provideHoverPreview(tex, range)
+                        .then( (hover) => { resolve(hover) } )
+                        return
                     }
                 }
                 resolve(new vscode.Hover(
@@ -79,6 +76,26 @@ export class HoverProvider implements vscode.HoverProvider {
                 need_dataurl: "1"
             })
         })
+    }
+
+    private findHoverOnRef(document: vscode.TextDocument, position: vscode.Position, token:string, labelPos: vscode.Position)
+    : [string, vscode.Range] | undefined {
+        const l = document.lineAt(labelPos.line).text
+        const pat = new RegExp('\\\\label\\{' + envpair.escapeRegExp(token) + '\\}')
+        if (!l.match(pat)) {
+            return undefined
+        }
+        let beginPos = this.findBeginPair(document, this.envBeginPatMathMode, labelPos)
+        if (beginPos && this.extension.panel) {
+            const tr = this.findHoverOnTex(document, beginPos, {render_label:true})
+            if (tr) {
+                const tex = tr[0]
+                const e = new vscode.Position(position.line, position.character + '\\label{}'.length + token.length)
+                const range = new vscode.Range(position, e)
+                return [tex, range]
+            }
+        }
+        return undefined
     }
 
     // Test whether cursor is in tex command strings

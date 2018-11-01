@@ -1,3 +1,5 @@
+window.addEventListener("pagerendered", () => {
+
 const embedded = window.parent !== window
 
 // PDFViewerApplication detects whether it's embedded in an iframe (window.parent !== window)
@@ -225,3 +227,5 @@ window.addEventListener("pagerendered", (ev) => {
     }
   }
 });
+
+}, {once: true});

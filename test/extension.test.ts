@@ -22,7 +22,7 @@ function sleep(ms) {
 }
 
 // Defines a Mocha test suite to group tests of similar kind together
-suite("Extension Tests", function () {
+suite("LaTeX Extension Tests", function () {
     const configuration = vscode.workspace.getConfiguration('workbench')
     const originalTheme = configuration.get<string>('colorTheme')
 
@@ -43,6 +43,27 @@ suite("Extension Tests", function () {
         await sleep(5000)
         if (!fs.existsSync(pdfPath)) {
             assert.fail("build fail.")
+        }
+    })
+
+    test("build a tex file and open a tab viewer.", async function() {
+        const pdfPath = path.join(workspaceRoot, 'test/texfiles/openTab/t.pdf')
+        const texPath = path.join(workspaceRoot, 'test/texfiles/openTab/t.tex')
+        if (fs.existsSync(pdfPath)) {
+            fs.unlinkSync(pdfPath)
+        }
+        this.timeout(30000)
+        const document = await vscode.workspace.openTextDocument(texPath)
+        await vscode.window.showTextDocument(document)
+        await extension.commander.build()
+        await sleep(5000)
+        if (!fs.existsSync(pdfPath)) {
+            assert.fail("build fail.")
+        }
+        extension.viewer.openTab(texPath)
+        await sleep(5000)
+        if (!extension.viewer.refreshExistingViewer(texPath)) {
+            assert.fail("opening a tab viewer fail.")
         }
     })
 

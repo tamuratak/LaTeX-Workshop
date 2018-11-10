@@ -8,3 +8,4 @@ test/texfiles/**/*.dvi
 test/texfiles/**/*.gz
 test/texfiles/**/*.log
 test/texfiles/**/*.pdf
+.vscode-test/

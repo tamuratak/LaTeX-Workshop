@@ -126,3 +126,8 @@ html #outerContainer.sidebarOpen > #sidebarContainer {
       display: none;
     }
 }
+
+#trimSelectContainer {
+    max-width: 130px;
+    width: 130px;
+}

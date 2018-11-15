@@ -67,6 +67,33 @@ suite("LaTeX Extension Tests", function () {
         }
     })
 
+    test("build a tex file in a dir with non-alphabe and non-number name.", async function() {
+        const originalTexPath = path.join(workspaceRoot, 'test/texfiles/dirName/t.tex')
+        const dirNames = ['#', '%25']
+        this.timeout(30000)
+        for (const dirName of dirNames) {
+            const dir = path.join(workspaceRoot, 'test/texfiles/dirName', dirName)
+            const pdfPath = path.join(dir, 't.pdf')
+            const texPath = path.join(dir, 't.tex')
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir)
+            }
+            fs.copyFileSync(originalTexPath, texPath)
+            const document = await vscode.workspace.openTextDocument(texPath)
+            await vscode.window.showTextDocument(document)
+            await extension.commander.build()
+            await sleep(5000)
+            if (!fs.existsSync(pdfPath)) {
+                assert.fail("build fail.")
+            } 
+            extension.viewer.openTab(texPath)
+            await sleep(5000)
+            if (!extension.viewer.refreshExistingViewer(texPath)) {
+                assert.fail("opening a tab viewer fail.")
+            }
+        }
+    })
+
     test("build a tex file whose root is self.", async function() {
         const pdfPath = path.join(workspaceRoot, 'test/texfiles/rootToSelf/t.pdf')
         const texPath = path.join(workspaceRoot, 'test/texfiles/rootToSelf/t.tex')

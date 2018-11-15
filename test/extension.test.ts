@@ -69,7 +69,7 @@ suite("LaTeX Extension Tests", function () {
 
     test("build a tex file in a dir with non-alphabe and non-number name.", async function() {
         const originalTexPath = path.join(workspaceRoot, 'test/texfiles/dirName/t.tex')
-        const dirNames = ['#', '%25']
+        const dirNames = ['a', '#']
         this.timeout(30000)
         for (const dirName of dirNames) {
             const dir = path.join(workspaceRoot, 'test/texfiles/dirName', dirName)
@@ -78,12 +78,16 @@ suite("LaTeX Extension Tests", function () {
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir)
             }
+            if (fs.existsSync(pdfPath)) {
+                fs.unlinkSync(pdfPath)
+            }
             fs.copyFileSync(originalTexPath, texPath)
             const document = await vscode.workspace.openTextDocument(texPath)
             await vscode.window.showTextDocument(document)
             await extension.commander.build()
             await sleep(5000)
             if (!fs.existsSync(pdfPath)) {
+                console.log("build fail: " + pdfPath)
                 assert.fail("build fail.")
             } 
             extension.viewer.openTab(texPath)

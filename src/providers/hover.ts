@@ -8,7 +8,7 @@ import {Extension} from '../main'
 import {tokenizer} from './tokenizer'
 import {ReferenceEntry} from './completer/reference'
 
-type TexMathEnv = { texString: string, range: vscode.Range, envname: string }
+export type TexMathEnv = { texString: string, range: vscode.Range, envname: string }
 type LabelsStore = {labels: {[k: string]: {tag: string, id: string}}, IDs: {[k: string]: number}, startNumber: number}
 
 export class HoverProvider implements vscode.HoverProvider {
@@ -135,7 +135,7 @@ export class MathPreview {
         return new vscode.Hover(new vscode.MarkdownString( `![equation](${md})`), tex.range )
     }
 
-    async getSvgDataUrlOnRef(tex: TexMathEnv, refToken: string, refData: ReferenceEntry) {
+    async getSvgDataUrlOnRef(tex: TexMathEnv, refToken: string) {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const scale = configuration.get('hoverPreview.scale') as number
         const s = this.mathjaxify(tex.texString, tex.envname, {stripLabel: false})
@@ -157,7 +157,7 @@ export class MathPreview {
     }
 
     async provideHoverOnRef(tex: TexMathEnv, refToken: string, refData: ReferenceEntry) : Promise<vscode.Hover> {
-        const ret = await this.getSvgDataUrlOnRef(tex, refToken, refData)
+        const ret = await this.getSvgDataUrlOnRef(tex, refToken)
         const line = refData.item.position.line
         const mdLink = new vscode.MarkdownString(`[View on pdf](command:latex-workshop.synctexto?${line})`)
         mdLink.isTrusted = true

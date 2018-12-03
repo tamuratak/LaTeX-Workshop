@@ -19,7 +19,7 @@ import {EnvPair} from './components/envpair'
 
 import {Completer} from './providers/completion'
 import {CodeActions} from './providers/codeactions'
-import {HoverProvider} from './providers/hover'
+import {HoverProvider, MathPreview} from './providers/hover'
 import {DocSymbolProvider} from './providers/docsymbol'
 import {ProjectSymbolProvider} from './providers/projectsymbol'
 import {SectionNodeProvider} from './providers/structure'
@@ -311,6 +311,7 @@ export class Extension {
     texMagician: TeXMagician
     envPair: EnvPair
     structureProvider: SectionNodeProvider
+    mathPreview: MathPreview
 
     constructor() {
         this.extensionRoot = path.resolve(`${__dirname}/../../`)
@@ -330,6 +331,7 @@ export class Extension {
         this.texMagician = new TeXMagician(this)
         this.envPair = new EnvPair(this)
         this.structureProvider = new SectionNodeProvider(this)
+        this.mathPreview = new MathPreview(this)
 
         this.logger.addLogMessage(`LaTeX Workshop initialized.`)
     }

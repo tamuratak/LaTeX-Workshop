@@ -135,7 +135,7 @@ export class MathPreview {
         return new vscode.Hover(new vscode.MarkdownString( `![equation](${md})`), tex.range )
     }
 
-    async provideHoverOnRef(tex: TexMathEnv, refToken: string, refData: ReferenceEntry) : Promise<vscode.Hover> {
+    async getSvgDataUrlOnRef(tex: TexMathEnv, refToken: string, refData: ReferenceEntry) {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const scale = configuration.get('hoverPreview.scale') as number
         const s = this.mathjaxify(tex.texString, tex.envname, {stripLabel: false})
@@ -152,11 +152,16 @@ export class MathPreview {
         this.colorSVG(data)
         const xml = data.svgNode.outerHTML
         const eqNumAndLabels = this.eqNumAndLabel(obj, tex, refToken)
-        const md = this.svgToDataUrl(xml)
+        const svgDataUrl = this.svgToDataUrl(xml)
+        return {svgDataUrl, eqNumAndLabels}
+    }
+
+    async provideHoverOnRef(tex: TexMathEnv, refToken: string, refData: ReferenceEntry) : Promise<vscode.Hover> {
+        const ret = await this.getSvgDataUrlOnRef(tex, refToken, refData)
         const line = refData.item.position.line
         const mdLink = new vscode.MarkdownString(`[View on pdf](command:latex-workshop.synctexto?${line})`)
         mdLink.isTrusted = true
-        return new vscode.Hover( [eqNumAndLabels, `![equation](${md})`, mdLink], tex.range )
+        return new vscode.Hover( [ret.eqNumAndLabels, `![equation](${ret.svgDataUrl})`, mdLink], tex.range )
     }
 
     eqNumAndLabel(obj: LabelsStore, tex: TexMathEnv, refToken: string) : string {

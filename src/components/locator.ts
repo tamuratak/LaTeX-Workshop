@@ -49,17 +49,20 @@ export class Locator {
         return record
     }
 
-    syncTeX(line: number | undefined = undefined, forcedViewer: string = 'auto') {
+    syncTeX(arg?: {line: number, filePath: string}, forcedViewer: string = 'auto') {
+        let line: number
+        let filePath: string
         let character = 0
         if (!vscode.window.activeTextEditor) {
             return
         }
-        const filePath = vscode.window.activeTextEditor.document.uri.fsPath
-        if (!this.extension.manager.hasTexId(vscode.window.activeTextEditor.document.languageId)) {
-            this.extension.logger.addLogMessage(`${filePath} is not a valid LaTeX file.`)
-            return
-        }
-        if (!line) {
+
+        if (arg === undefined) {
+            filePath = vscode.window.activeTextEditor.document.uri.fsPath
+            if (!this.extension.manager.hasTexId(vscode.window.activeTextEditor.document.languageId)) {
+                this.extension.logger.addLogMessage(`${filePath} is not a valid LaTeX file.`)
+                return
+            }
             const position = vscode.window.activeTextEditor.selection.active
             if (!position) {
                 this.extension.logger.addLogMessage(`Cannot get cursor position: ${position}`)
@@ -67,6 +70,9 @@ export class Locator {
             }
             line = position.line + 1
             character = position.character
+        } else {
+            line = arg.line
+            filePath = arg.filePath
         }
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const pdfFile = this.extension.manager.tex2pdf(this.extension.manager.rootFile)
@@ -120,14 +126,14 @@ export class Locator {
         })
     }
 
-    syncTeXOnRef(line: number) {
+    syncTeXOnRef(arg: {line: number, filePath: string}) {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const viewer = configuration.get('view.pdf.ref.viewer') as string
-        line += 1
+        arg.line += 1
         if (viewer) {
-            this.syncTeX(line, viewer)
+            this.syncTeX(arg, viewer)
         } else {
-            this.syncTeX(line)
+            this.syncTeX(arg)
         }
     }
 

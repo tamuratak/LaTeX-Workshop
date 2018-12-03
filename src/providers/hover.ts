@@ -8,7 +8,7 @@ import {Extension} from '../main'
 import {tokenizer, onAPackage} from './tokenizer'
 import {ReferenceEntry} from './completer/reference'
 
-type TexMathEnv = { texString: string, range: vscode.Range, envname: string }
+export type TexMathEnv = { texString: string, range: vscode.Range, envname: string }
 type LabelsStore = {labels: {[k: string]: {tag: string, id: string}}, IDs: {[k: string]: number}, startNumber: number}
 
 export class HoverProvider implements vscode.HoverProvider {

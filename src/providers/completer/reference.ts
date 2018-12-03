@@ -50,7 +50,12 @@ export class Reference {
         Object.keys(suggestions).map(key => {
             const item = suggestions[key]
             const command = new vscode.CompletionItem(item.reference, vscode.CompletionItemKind.Reference)
-            command.documentation = item.text
+            const tex = this.extension.mathPreview.findHoverOnRef(args.document, args.position, key, item.position)
+            if (tex !== undefined) {
+                command.documentation = JSON.stringify(tex)
+            } else {
+                command.documentation = JSON.stringify(item.text)
+            }
             command.range = args.document.getWordRangeAtPosition(args.position, /[-a-zA-Z0-9_:\.]+/)
             this.suggestions.push(command)
         })

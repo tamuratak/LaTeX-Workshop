@@ -8,6 +8,7 @@ import {Environment} from './completer/environment'
 import {Reference} from './completer/reference'
 import {Package} from './completer/package'
 import {Input} from './completer/input'
+import {TexMathEnv} from './hover'
 
 export class Completer implements vscode.CompletionItemProvider {
     extension: Extension
@@ -80,6 +81,26 @@ export class Completer implements vscode.CompletionItemProvider {
             }
             resolve()
         })
+    }
+
+    async resolveCompletionItem(item: vscode.CompletionItem, token: vscode.CancellationToken) : Promise<vscode.CompletionItem> {
+        if (item.kind === vscode.CompletionItemKind.Reference) {
+            if (typeof item.documentation !== 'string') {
+                return item
+            }
+            const doc = JSON.parse(item.documentation)
+            if (typeof doc === 'string') {
+                return item
+            }
+            if (doc.texString !== undefined) {
+                const tex: TexMathEnv = doc
+                const ret = await this.extension.mathPreview.getSvgDataUrlOnRef(tex, item.label)
+                item.documentation = new vscode.MarkdownString(`![equation](${ret.svgDataUrl})`)
+                return item
+            }
+
+        }
+        return item
     }
 
     completion(type: string, line: string, args: {document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext}) : vscode.CompletionItem[] {

@@ -44,7 +44,7 @@ export class Reference {
         Object.keys(suggestions).map(key => {
             const item = suggestions[key]
             const command = new vscode.CompletionItem(item.reference, vscode.CompletionItemKind.Reference)
-            const tex = this.extension.mathPreview.findHoverOnRef(args.document, args.position, key, item.position)
+            const tex = this.extension.mathPreview.findHoverOnRef(args.document, args.position, key, this.referenceData[key])
             if (tex !== undefined) {
                 command.documentation = JSON.stringify(tex)
             } else {

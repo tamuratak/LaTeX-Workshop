@@ -22,6 +22,7 @@ export class Builder {
     buildMutex: Mutex
     waitingForBuildToFinishMutex: Mutex
     isMiktex: boolean = false
+    delaySaveMutex: Mutex
 
     constructor(extension: Extension) {
         this.extension = extension
@@ -33,6 +34,7 @@ export class Builder {
         }
         this.buildMutex = new Mutex()
         this.waitingForBuildToFinishMutex = new Mutex()
+        this.delaySaveMutex = new Mutex()
         try {
             const pdflatexVersion = cp.execSync('pdflatex --version')
             if (pdflatexVersion.toString().match(/MiKTeX/)) {
@@ -65,6 +67,8 @@ export class Builder {
         setTimeout(() => this.disableBuildAfterSave = false, 1000)
         const releaseWaiting = await this.waitingForBuildToFinishMutex.acquire()
         const releaseBuildMutex = await this.buildMutex.acquire()
+        const releaseDelaySaveMutex = await this.delaySaveMutex.acquire()
+        setTimeout(() => releaseDelaySaveMutex(), 1000)
         releaseWaiting()
         return releaseBuildMutex
     }

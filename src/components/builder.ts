@@ -61,16 +61,19 @@ export class Builder {
         return this.waitingForBuildToFinishMutex.count < 1
     }
 
+    // We delay the saving of a TeX file by a user's operation to avoid that
+    // LaTeX engines load the files being saved in an inconsistent state.
+    async delaySave() {
+        const releaseDelaySaveMutex = await this.delaySaveMutex.acquire()
+        setTimeout(() => releaseDelaySaveMutex(), 900)
+    }
+
     async preprocess() : Promise<() => void> {
         this.disableBuildAfterSave = true
         await vscode.workspace.saveAll()
         setTimeout(() => this.disableBuildAfterSave = false, 1000)
         const releaseWaiting = await this.waitingForBuildToFinishMutex.acquire()
         const releaseBuildMutex = await this.buildMutex.acquire()
-        // We delay saving a TeX file by a user's operation to avoid that
-        // LaTeX engines load the files being saved in an inconsistent state.
-        const releaseDelaySaveMutex = await this.delaySaveMutex.acquire()
-        setTimeout(() => releaseDelaySaveMutex(), 1000)
         releaseWaiting()
         return releaseBuildMutex
     }
@@ -87,7 +90,8 @@ export class Builder {
         if (ws && ws.length > 0) {
             wd = ws[0].uri.fsPath
         }
-        this.currentProcess = cp.spawn(command.command, command.args, {cwd: wd})
+        await this.delaySave()
+        this.currentProcess = cp.spawn(command.command, command.args, {cwd: pwd})
         const pid = this.currentProcess.pid
         this.extension.logger.addLogMessage(`LaTeX buid process as an external command spawned. PID: ${pid}.`)
 
@@ -136,13 +140,13 @@ export class Builder {
         })
     }
 
-    buildInitiator(rootFile: string, recipe: string | undefined = undefined, releaseBuildMutex: () => void) {
+    async buildInitiator(rootFile: string, recipe: string | undefined = undefined, releaseBuildMutex: () => void) {
         const steps = this.createSteps(rootFile, recipe)
         if (steps === undefined) {
             this.extension.logger.addLogMessage('Invalid toolchain.')
             return
         }
-        this.buildStep(rootFile, steps, 0, recipe || 'Build', releaseBuildMutex) // use 'Build' as default name
+        await this.buildStep(rootFile, steps, 0, recipe || 'Build', releaseBuildMutex) // use 'Build' as default name
     }
 
     async build(rootFile: string, recipe: string | undefined = undefined) {
@@ -170,7 +174,7 @@ export class Builder {
             directories.forEach(directory => {
                 fs.ensureDirSync(path.resolve(outDir, directory))
             })
-            this.buildInitiator(rootFile, recipe, releaseBuildMutex)
+            await this.buildInitiator(rootFile, recipe, releaseBuildMutex)
         } catch (e) {
             releaseBuildMutex()
             throw(e)
@@ -185,7 +189,7 @@ export class Builder {
         }
     }
 
-    buildStep(rootFile: string, steps: StepCommand[], index: number, recipeName: string, releaseBuildMutex: () => void) {
+    async buildStep(rootFile: string, steps: StepCommand[], index: number, recipeName: string, releaseBuildMutex: () => void) {
         if (index === 0) {
             this.extension.logger.clearCompilerMessage()
         }
@@ -205,6 +209,7 @@ export class Builder {
             Object.keys(currentEnv).forEach(key => envVars[key] = currentEnv[key])
         }
         envVars['max_print_line'] = maxPrintLine
+        await this.delaySave()
         if (steps[index].name === texMagicProgramName || steps[index].name === bibMagicProgramName) {
             // All optional arguments are given as a unique string (% !TeX options) if any, so we use {shell: true}
             let command = steps[index].command
@@ -239,7 +244,7 @@ export class Builder {
             releaseBuildMutex()
         })
 
-        this.currentProcess.on('exit', (exitCode, signal) => {
+        this.currentProcess.on('exit', async (exitCode, signal) => {
             this.extension.parser.parse(stdout)
             if (exitCode !== 0) {
                 this.extension.logger.addLogMessage(`Recipe returns with error: ${exitCode}/${signal}. PID: ${pid}.`)
@@ -251,8 +256,8 @@ export class Builder {
                         this.extension.logger.displayStatus('x', 'errorForeground', `Recipe terminated with error. Retry building the project.`, 'warning')
                         this.extension.logger.addLogMessage(`Cleaning auxillary files and retrying build after toolchain error.`)
 
-                        this.extension.commander.clean().then(() => {
-                            this.buildStep(rootFile, steps, 0, recipeName, releaseBuildMutex)
+                        this.extension.commander.clean().then( async () => {
+                            await this.buildStep(rootFile, steps, 0, recipeName, releaseBuildMutex)
                         })
                     } else {
                         this.currentProcess = undefined
@@ -289,7 +294,7 @@ export class Builder {
                     }
                 } else {
                     this.extension.logger.addLogMessage(`A step in recipe finished. PID: ${pid}.`)
-                    this.buildStep(rootFile, steps, index + 1, recipeName, releaseBuildMutex)
+                    await this.buildStep(rootFile, steps, index + 1, recipeName, releaseBuildMutex)
                 }
             }
         })

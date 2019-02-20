@@ -67,6 +67,8 @@ export class Builder {
         setTimeout(() => this.disableBuildAfterSave = false, 1000)
         const releaseWaiting = await this.waitingForBuildToFinishMutex.acquire()
         const releaseBuildMutex = await this.buildMutex.acquire()
+        // We delay saving a TeX file by a user's operation to avoid that
+        // LaTeX engines load the files being saved in an inconsistent state.
         const releaseDelaySaveMutex = await this.delaySaveMutex.acquire()
         setTimeout(() => releaseDelaySaveMutex(), 1000)
         releaseWaiting()

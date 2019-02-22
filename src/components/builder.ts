@@ -91,7 +91,7 @@ export class Builder {
             wd = ws[0].uri.fsPath
         }
         await this.delaySave()
-        this.currentProcess = cp.spawn(command.command, command.args, {cwd: pwd})
+        this.currentProcess = cp.spawn(command.command, command.args, {cwd: wd})
         const pid = this.currentProcess.pid
         this.extension.logger.addLogMessage(`LaTeX buid process as an external command spawned. PID: ${pid}.`)
 

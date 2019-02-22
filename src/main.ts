@@ -244,6 +244,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand('latex-workshop.showCompilationPanel', () => extension.buildInfo.showPanel())
 
+    context.subscriptions.push(vscode.workspace.onWillSaveTextDocument(async (e: vscode.TextDocumentWillSaveEvent) => {
+        e.waitUntil( new Promise( async resolve => {
+            const release = await extension.builder.delaySaveMutex.acquire()
+            setImmediate( () => release() )
+            resolve()
+        }))
+    }))
+
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(async (e: vscode.TextDocument) => {
         if (extension.manager.hasTexId(e.languageId)) {
             extension.linter.lintRootFileIfEnabled()

@@ -94,7 +94,7 @@ export class Completer implements vscode.CompletionItemProvider {
             }
             if (doc.texString !== undefined) {
                 const tex: TexMathEnv = doc
-                const ret = await this.extension.mathPreview.getSvgDataUrlOnRef(tex, item.label)
+                const ret = await this.extension.mathPreview.getSvgDataUrlOnRef(tex, "", item.label)
                 item.documentation = new vscode.MarkdownString(`![equation](${ret.svgDataUrl})`)
                 return item
             }

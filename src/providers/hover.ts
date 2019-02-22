@@ -33,9 +33,6 @@ export class HoverProvider implements vscode.HoverProvider {
                 const tex = this.mathPreview.findHoverOnTex(document, position)
                 if (tex) {
                     this.mathPreview.provideHoverOnTex(document, tex, this.mathPreview.findNewCommand(document.getText()))
-                    const newCommand = this.mathPreview.findNewCommand(document.getText())
-                    tex.texString = newCommand + tex.texString
-                    this.mathPreview.provideHoverOnTex(document, tex, this.mathPreview.findNewCommand(document.getText()))
                         .then(hover => resolve(hover))
                     return
                 }

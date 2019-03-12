@@ -83,6 +83,7 @@ export class Completer implements vscode.CompletionItemProvider {
         })
     }
 
+    // @ts-ignore
     async resolveCompletionItem(item: vscode.CompletionItem, token: vscode.CancellationToken) : Promise<vscode.CompletionItem> {
         if (item.kind === vscode.CompletionItemKind.Reference) {
             if (typeof item.documentation !== 'string') {

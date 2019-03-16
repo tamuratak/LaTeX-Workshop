@@ -65,7 +65,9 @@ export class Builder {
     // LaTeX engines load the files being saved in an inconsistent state.
     async delaySave() {
         const releaseDelaySaveMutex = await this.delaySaveMutex.acquire()
-        setTimeout(() => releaseDelaySaveMutex(), 800)
+        const configuration = vscode.workspace.getConfiguration('latex-workshop')
+        const t = configuration.get('latex.build.savingDelay') as number
+        setTimeout(() => releaseDelaySaveMutex(), t)
     }
 
     async preprocess() : Promise<() => void> {

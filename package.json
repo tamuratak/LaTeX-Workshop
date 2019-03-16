@@ -683,6 +683,11 @@
           "default": true,
           "markdownDescription": "Clear the LaTeX Compiler logs before every step of a recipe.\nSet this property to false to keep the logs of all tools in a recipe."
         },
+        "latex-workshop.latex.build.savingDelay": {
+          "type": "number",
+          "default": 0,
+          "markdownDescription": "Defines the delay in milliseconds for a TeX file to be saved just after a Tex build process started. This avoids that LaTeX engines load the files being saved in an inconsistent state."
+        },
         "latex-workshop.latex.autoClean.run": {
           "type": "string",
           "enum": [

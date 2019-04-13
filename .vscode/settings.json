@@ -8,5 +8,13 @@
     },
     "typescript.tsdk": "./node_modules/typescript/lib",  // we want to use the TS server from our node_modules folder to control its version
     "vsicons.presets.angular": false,
-    "tslint.exclude": "node_modules"
+    "tslint.exclude": "node_modules",
+    "python.venvPath": ".venv",
+    "python.pythonPath": "${workspaceFolder}/.venv/bin/python",
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": ["--max-line-length", "99", "--ignore", "F401,W503"],
+    "python.linting.mypyEnabled": true,
+    "python.unitTest.pyTestEnabled": true,
+    "python.unitTest.unittestEnabled": false,
+    "python.unitTest.nosetestsEnabled": false
 }

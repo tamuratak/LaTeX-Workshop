@@ -14,7 +14,8 @@
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Args": ["--max-line-length", "99", "--ignore", "F401,W503"],
     "python.linting.mypyEnabled": true,
-    "python.unitTest.pyTestEnabled": true,
+    "python.unitTest.pyTestEnabled": false,
     "python.unitTest.unittestEnabled": false,
-    "python.unitTest.nosetestsEnabled": false
+    "python.unitTest.nosetestsEnabled": false,
+    "python.unitTest.promptToConfigure": false
 }

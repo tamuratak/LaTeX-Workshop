@@ -185,7 +185,11 @@ export class Command {
         const symbols = JSON.parse(fs.readFileSync(`${this.extension.extensionRoot}/data/unimathsymbols.json`).toString())
         Object.keys(symbols).forEach(key => {
             const item = symbols[key]
-            this.defaultSymbols[key] = this.entryToCompletionItem(item)
+            const citem = this.entryToCompletionItem(item)
+            if ('string' === typeof citem.documentation) {
+                citem.documentation = new vscode.MarkdownString(citem.documentation)
+            }
+            this.defaultSymbols[key] = citem
         })
     }
 

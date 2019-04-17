@@ -43,6 +43,7 @@ socket.addEventListener("message", (event) => {
             indicator.style.left = `${scrollX}px`
             indicator.style.top = `${scrollY}px`
             setTimeout(() => indicator.className = 'hide', 10)
+            window.history.pushState(null, null, '#historyRef')
             break
         case "refresh":
             // Note: without showPreviousViewOnLoad = false restoring the position after the refresh will fail if
@@ -158,7 +159,7 @@ document.addEventListener('pagerendered', (evPageRendered) => {
 
 // back button (mostly useful for the embedded viewer)
 document.getElementById("historyBack").addEventListener("click", function() {
-  history.back()
+  window.history.back()
 })
 
 // keyboard bindings

@@ -159,19 +159,35 @@ document.addEventListener('pagerendered', (evPageRendered) => {
     }
 }, true)
 
-// back button (mostly useful for the embedded viewer)
-document.getElementById("historyBack").addEventListener("click", function() {
-  console.log(window.history.length)
+const viewerHistoryBack = () => {
   const container = document.getElementById('viewerContainer')
   const currentScrollTop = container.scrollTop
   window.history.back()
+  // skip duplicate histories
   if (currentScrollTop === container.scrollTop){
     window.history.back()
   }
   if (currentScrollTop === container.scrollTop){
     window.history.back()
   }
-})
+}
+
+const viewerHistoryForward = () => {
+  const container = document.getElementById('viewerContainer')
+  const currentScrollTop = container.scrollTop
+  window.history.forward()
+  // skip duplicate histories
+  if (currentScrollTop === container.scrollTop){
+    window.history.forward()
+  }
+  if (currentScrollTop === container.scrollTop){
+    window.history.forward()
+  }
+}
+
+// back and forward button
+document.getElementById("historyBack").addEventListener("click", viewerHistoryBack)
+document.getElementById("historyForward").addEventListener("click", viewerHistoryForward)
 
 // keyboard bindings
 window.addEventListener('keydown', function(evt) {
@@ -186,9 +202,9 @@ window.addEventListener('keydown', function(evt) {
   // Back/Forward don't work in the embedded viewer, so we simulate them.
   if (embedded && (evt.altKey || evt.metaKey)) {
     if (evt.keyCode == 37) {
-      history.back();
+      viewerHistoryBack();
     } else if(evt.keyCode == 39) {
-      history.forward();
+      viewerHistoryForward();
     }
   }
 })

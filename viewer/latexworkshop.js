@@ -36,14 +36,16 @@ socket.addEventListener("message", (event) => {
             let page = document.getElementsByClassName('page')[data.data.page - 1]
             let scrollX = page.offsetLeft + pos[0]
             let scrollY = page.offsetTop + page.offsetHeight - pos[1]
+
+            window.history.pushState(null, null, window.location.href)
             container.scrollTop = scrollY - document.body.offsetHeight * 0.4
+            window.history.pushState(null, null, window.location.href)
 
             let indicator = document.getElementById('synctex-indicator')
             indicator.className = 'show'
             indicator.style.left = `${scrollX}px`
             indicator.style.top = `${scrollY}px`
             setTimeout(() => indicator.className = 'hide', 10)
-            window.history.pushState(null, null, '#historyRef')
             break
         case "refresh":
             // Note: without showPreviousViewOnLoad = false restoring the position after the refresh will fail if
@@ -159,7 +161,16 @@ document.addEventListener('pagerendered', (evPageRendered) => {
 
 // back button (mostly useful for the embedded viewer)
 document.getElementById("historyBack").addEventListener("click", function() {
+  console.log(window.history.length)
+  const container = document.getElementById('viewerContainer')
+  const currentScrollTop = container.scrollTop
   window.history.back()
+  if (currentScrollTop === container.scrollTop){
+    window.history.back()
+  }
+  if (currentScrollTop === container.scrollTop){
+    window.history.back()
+  }
 })
 
 // keyboard bindings

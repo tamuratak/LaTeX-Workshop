@@ -207,13 +207,7 @@ export class HoverProvider implements vscode.HoverProvider {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const scale = configuration.get('hover.preview.scale') as number
 
-        let tag: string
-        if (refData.item.atLastCompilation !== undefined && configuration.get('hover.ref.numberAtLastCompilation.enabled') as boolean) {
-            tag = refData.item.atLastCompilation.refNumber
-        } else {
-            tag = refData.item.reference
-        }
-        const newTex = this.replaceLabelWithTag(tex.texString, refData.item.reference, tag)
+        const newTex = this.replaceLabelWithTag(tex.texString, refData)
         const s = this.mathjaxify(newTex, tex.envname, {stripLabel: false})
         const obj = { labels : {}, IDs: {}, startNumber: 0 }
         const data = await this.mj.typeset({
@@ -244,17 +238,23 @@ export class HoverProvider implements vscode.HoverProvider {
         return undefined
     }
 
-    replaceLabelWithTag(tex: string, refLabel?: string, tag?: string) : string {
+    replaceLabelWithTag(tex: string, refData: ReferenceEntry) : string {
+        const configuration = vscode.workspace.getConfiguration('latex-workshop')
+        const labelOption = configuration.get('latex-workshop.hover.ref.label') as string
+        const numberOption = configuration.get('hover.ref.numberAtLastCompilation.enabled') as boolean
+        const referenceData = this.extension.completer.reference.referenceData
+        const refLabel = refData.item.reference
         let newTex = tex.replace(/\\label\{(.*?)\}/g, (_matchString, matchLabel, _offset, _s) => {
-            if (refLabel) {
-                if (refLabel === matchLabel) {
-                    if (tag) {
-                        return `\\tag{${tag}}`
-                    } else {
-                        return `\\tag{${matchLabel}}`
-                    }
-                }
+            let matchLabelNumber: string | undefined
+            const matchData = referenceData[matchLabel]
+            if (matchData !== undefined && matchData.item.atLastCompilation !== undefined) {
+                matchLabelNumber = matchData.item.atLastCompilation.refNumber
+            }
+            if (refLabel !== matchLabel && labelOption === 'one') {
                 return '\\notag'
+            }
+            if (numberOption && matchLabelNumber !== undefined) {
+                return `\\tag{${matchLabelNumber}}~\\tag{${matchLabel}}`
             } else {
                 return `\\tag{${matchLabel}}`
             }

@@ -1103,6 +1103,19 @@
           "default": true,
           "markdownDescription": "Enable Hover on References."
         },
+        "latex-workshop.hover.ref.label": {
+          "type": "string",
+          "default": "all",
+          "enum": [
+            "all",
+            "one"
+          ],
+          "markdownDescription": "How to display label in the equation on hover on ref.",
+          "enumDescriptions": [
+            "Display all the labels.",
+            "Display only the label of the selected ref."
+          ]
+        },
         "latex-workshop.hover.ref.numberAtLastCompilation.enabled": {
           "type": "boolean",
           "default": false,

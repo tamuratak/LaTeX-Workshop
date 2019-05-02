@@ -1128,6 +1128,21 @@
           "default": 1,
           "markdownDescription": "Scaling of Hover Preview."
         },
+        "latex-workshop.hover.preview.newcommand.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable automatically including newcommands of LaTeX for Hover Preview."
+        },
+        "latex-workshop.hover.preview.newcommand.parseTeXFile": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable automatically including newcommands in the current TeX file for Hover Preview."
+        },
+        "latex-workshop.hover.preview.newcommand.newcommandFile": {
+          "type": "string",
+          "default": "newc.tex",
+          "markdownDescription": "Set the path of a file including newcommands of LaTeX for Hover Preview. If the path is relative, it is joined with the root dir."
+        },
         "latex-workshop.hover.preview.cursor.enabled": {
           "type": "boolean",
           "default": true,

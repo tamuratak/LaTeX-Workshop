@@ -109,25 +109,25 @@ export class HoverProvider implements vscode.HoverProvider {
     async findNewCommand(content: string) {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         let commandsString = ''
-        if (!configuration.get('hover.preview.newcommand.enabled') as boolean) {
-            return commandsString
-        }
         const newCommandFile = configuration.get('hover.preview.newcommand.newcommandFile') as string
-        if (path.isAbsolute(newCommandFile)) {
-            if (fs.existsSync(newCommandFile)) {
-                commandsString = fs.readFileSync(newCommandFile, {encoding: 'utf8'})
-            }
-        } else {
-            if (this.extension.manager.rootFile === undefined) {
-                await this.extension.manager.findRoot()
-            }
-            const rootDir = this.extension.manager.rootDir
-            const newCommandFileAbs = path.join(rootDir, newCommandFile)
-            if (fs.existsSync(newCommandFileAbs)) {
-                commandsString = fs.readFileSync(newCommandFileAbs, {encoding: 'utf8'})
+        if (newCommandFile !== '') {
+            if (path.isAbsolute(newCommandFile)) {
+                if (fs.existsSync(newCommandFile)) {
+                    commandsString = fs.readFileSync(newCommandFile, {encoding: 'utf8'})
+                }
+            } else {
+                if (this.extension.manager.rootFile === undefined) {
+                    await this.extension.manager.findRoot()
+                }
+                const rootDir = this.extension.manager.rootDir
+                const newCommandFileAbs = path.join(rootDir, newCommandFile)
+                if (fs.existsSync(newCommandFileAbs)) {
+                    commandsString = fs.readFileSync(newCommandFileAbs, {encoding: 'utf8'})
+                }
             }
         }
-        if (!configuration.get('hover.preview.newcommand.parseTeXFile') as boolean) {
+        commandsString = commandsString.replace(/^\s*$/gm, '')
+        if (!configuration.get('hover.preview.newcommand.parseTeXFile.enabled') as boolean) {
             return commandsString
         }
         const regex = /(\\(?:(?:(?:re)?new|provide)command(\*)?(?:\[[^\[\]\{\}]*\])*{.*})|\\(?:def\\[a-zA-Z]+(?:#[0-9])*{.*}))/gm

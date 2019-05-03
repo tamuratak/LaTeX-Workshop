@@ -1131,12 +1131,12 @@
         "latex-workshop.hover.preview.newcommand.parseTeXFile.enabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable newcommands in the current TeX file to be included in Hover Preview."
+          "markdownDescription": "Enable newcommands defined in the current TeX file to be included in Hover Preview."
         },
         "latex-workshop.hover.preview.newcommand.newcommandFile": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Set the path of a file including newcommands of LaTeX for Hover Preview. If the path is relative, it is joined with the root dir."
+          "markdownDescription": "Set the path of a file in which newcommands of LaTeX defined for Hover Preview. If the path is relative, it is joined with the root dir."
         },
         "latex-workshop.hover.preview.cursor.enabled": {
           "type": "boolean",

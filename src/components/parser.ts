@@ -256,6 +256,10 @@ export class Parser {
 
     // find a LaTeX error message beginning with '!' and parse it.
     parseLaTeXExclamationError(log: string) {
+        const runwayFound = this.parseLaTeXRunawayError(log)
+        if (runwayFound) {
+            return
+        }
         const exclamationErrorRegex = /^!([^]*?)^l\.(\d+)/m
         const result = log.match(exclamationErrorRegex)
         if (result) {
@@ -267,6 +271,38 @@ export class Parser {
             }
             this.buildLog.push(currentResult)
         }
+    }
+
+    parseLaTeXRunawayError(log: string) {
+        const runawayErrorRegex = /^Runaway argument\?\r?\n(.*?)\r?\n^!([^]*?)^l.(\d+?)\s+?(\\input{(.*?)})?/m
+        const result = log.match(runawayErrorRegex)
+        if (result) {
+            const filename = result[5] ? path.resolve(this.extension.manager.rootDir, result[5]) : this.extension.manager.rootFile
+            if (!fs.existsSync(filename)) {
+                return false
+            }
+            let lineNum = Number(result[3])
+            try {
+                const textString = fs.readFileSync(filename, {encoding: 'utf8'})
+                let message = result[1].trim().replace(/\\+ETC\.$/, '')
+                message = message.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/\s+/g, '[\\s\\r\\n]*')
+                const messageRegex = new RegExp(message)
+                const m = textString.match(messageRegex)
+                if (m) {
+                    lineNum = textString.slice(0, m.index).split('\n').length
+                }
+            } catch (e) {
+            }
+            const currentResult = {
+                type: 'error',
+                text: result[0],
+                file: filename,
+                line: lineNum
+            }
+            this.buildLog.push(currentResult)
+            return true
+        }
+        return false
     }
 
     parseLaTeXFileStack(line: string, fileStack: string[], nested: number) : number {

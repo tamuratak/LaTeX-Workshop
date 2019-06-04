@@ -29,7 +29,7 @@ export class HoverProvider implements vscode.HoverProvider {
             const hovCitation = configuration.get('hover.citation.enabled') as boolean
             const hovCommand = configuration.get('hover.command.enabled') as boolean
             if (hov) {
-                const tex = this.mathPreview.findHoverOnTex(document, position)
+                const tex = this.mathPreview.findMathEnvOnBeginEnvname(document, position)
                 if (tex) {
                     const newCommands = await this.mathPreview.findNewCommand(document.getText())
                     this.provideHoverOnTex(document, tex, newCommands)
@@ -153,7 +153,7 @@ export class HoverProvider implements vscode.HoverProvider {
         const mdLink = new vscode.MarkdownString(`[View on pdf](${link})`)
         mdLink.isTrusted = true
         if (configuration.get('hover.preview.ref.enabled') as boolean) {
-            const tex = this.mathPreview.findHoverOnRef(document, position, token, refData)
+            const tex = this.mathPreview.findMathEnvOnRef(document, position, token, refData)
             if (tex) {
                 const newCommands = await this.mathPreview.findNewCommand(document.getText())
                 return this.provideHoverPreviewOnRef(tex, newCommands, refData)
@@ -450,23 +450,23 @@ export class MathPreview {
         return s
     }
 
-    findHoverOnTex(document: vscode.TextDocument | TextDocumentLike, position: vscode.Position) : TexMathEnv | undefined {
+    findMathEnvOnBeginEnvname(document: vscode.TextDocument | TextDocumentLike, position: vscode.Position) : TexMathEnv | undefined {
         const envBeginPat = /\\begin\{(align|align\*|alignat|alignat\*|aligned|alignedat|array|Bmatrix|bmatrix|cases|CD|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*|gathered|matrix|multline|multline\*|pmatrix|smallmatrix|split|subarray|Vmatrix|vmatrix)\}/
         let r = document.getWordRangeAtPosition(position, envBeginPat)
         if (r) {
             const envname = this.getFirstRmemberedSubstring(document.getText(r), envBeginPat)
-            return this.findHoverOnEnv(document, envname, r.start)
+            return this.findMathEnvFromBeginEnvname(document, envname, r.start)
         }
         const parenBeginPat = /(\\\[|\\\(|\$\$)/
         r = document.getWordRangeAtPosition(position, parenBeginPat)
         if (r) {
             const paren = this.getFirstRmemberedSubstring(document.getText(r), parenBeginPat)
-            return this.findHoverOnParen(document, paren, r.start)
+            return this.findMathEnvOnParen(document, paren, r.start)
         }
-        return this.findHoverOnInline(document, position)
+        return this.findInlineMathOnInline(document, position)
     }
 
-    findHoverOnRef(document: vscode.TextDocument, position: vscode.Position, token: string, refData: ReferenceEntry)
+    findMathEnvOnRef(document: vscode.TextDocument, position: vscode.Position, token: string, refData: ReferenceEntry)
     : TexMathEnv | undefined {
         const docOfRef = TextDocumentLike.load(refData.file)
         const envBeginPatMathMode = /\\begin\{(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)\}/
@@ -477,7 +477,7 @@ export class MathPreview {
             const labelPos = new vscode.Position(refData.item.position.line, m.index)
             const beginPos = this.findBeginPair(docOfRef, envBeginPatMathMode, labelPos)
             if (beginPos) {
-                const t = this.findHoverOnTex(docOfRef, beginPos)
+                const t = this.findMathEnvOnBeginEnvname(docOfRef, beginPos)
                 if (t) {
                     const beginEndRange = t.range
                     const refRange = document.getWordRangeAtPosition(position, /\{.*?\}/)
@@ -553,7 +553,7 @@ export class MathPreview {
     //  \begin{...}                \end{...}
     //  ^
     //  startPos
-    findHoverOnEnv(document: vscode.TextDocument | TextDocumentLike, envname: string, startPos: vscode.Position) : TexMathEnv | undefined {
+    findMathEnvFromBeginEnvname(document: vscode.TextDocument | TextDocumentLike, envname: string, startPos: vscode.Position) : TexMathEnv | undefined {
         const pattern = new RegExp('\\\\end\\{' + utils.escapeRegExp(envname) + '\\}')
         const startPos1 = new vscode.Position(startPos.line, startPos.character + envname.length + '\\begin{}'.length)
         const endPos = this.findEndPair(document, pattern, startPos1)
@@ -567,7 +567,7 @@ export class MathPreview {
     //  \[                \]
     //  ^
     //  startPos
-    findHoverOnParen(document: vscode.TextDocument | TextDocumentLike, envname: string, startPos: vscode.Position) : TexMathEnv | undefined {
+    findMathEnvOnParen(document: vscode.TextDocument | TextDocumentLike, envname: string, startPos: vscode.Position) : TexMathEnv | undefined {
         const pattern = envname === '\\[' ? /\\\]/ : envname === '\\(' ? /\\\)/ : /\$\$/
         const startPos1 = new vscode.Position(startPos.line, startPos.character + envname.length)
         const endPos = this.findEndPair(document, pattern, startPos1)
@@ -578,7 +578,7 @@ export class MathPreview {
         return undefined
     }
 
-    findHoverOnInline(document: vscode.TextDocument | TextDocumentLike, position: vscode.Position) : TexMathEnv | undefined {
+    findInlineMathOnInline(document: vscode.TextDocument | TextDocumentLike, position: vscode.Position) : TexMathEnv | undefined {
         const currentLine = document.lineAt(position.line).text
         const regex = /(?<!\$|\\)\$(?!\$)(?:\\.|[^\\])+?\$|\\\(.+?\\\)/
         let s = currentLine

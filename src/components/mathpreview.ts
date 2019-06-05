@@ -12,8 +12,8 @@ export type TexMathEnv = { texString: string, range: vscode.Range, envname: stri
 export class MathPreview {
     extension: Extension
     jaxInitialized = false
-    color
-    mj
+    color: string
+    mj: any
 
     constructor(extension: Extension) {
         this.extension = extension
@@ -271,7 +271,7 @@ export class MathPreview {
             const paren = this.getFirstRmemberedSubstring(document.getText(r), parenBeginPat)
             return this.findMathEnvOnParen(document, paren, r.start)
         }
-        return this.findInlineMathOnInline(document, position)
+        return this.findInlineMath(document, position)
     }
 
     findMathEnvOnRef(document: vscode.TextDocument, position: vscode.Position, token: string, refData: ReferenceEntry)
@@ -386,7 +386,7 @@ export class MathPreview {
         return undefined
     }
 
-    findInlineMathOnInline(document: vscode.TextDocument | TextDocumentLike, position: vscode.Position) : TexMathEnv | undefined {
+    findInlineMath(document: vscode.TextDocument | TextDocumentLike, position: vscode.Position) : TexMathEnv | undefined {
         const currentLine = document.lineAt(position.line).text
         const regex = /(?<!\$|\\)\$(?!\$)(?:\\.|[^\\])+?\$|\\\(.+?\\\)/
         let s = currentLine

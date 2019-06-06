@@ -292,9 +292,19 @@
         "command": "latex-structure.toggle-follow-cursor",
         "title": "Toggle follow cursor",
         "category": "LaTeX Workshop"
+      },
+      {
+        "command": "latex-workshop.showMathPreview",
+        "title": "Show Math Preview",
+        "category": "LaTeX Workshop"
       }
     ],
     "keybindings": [
+      {
+        "key": "ctrl+l ctrl+h",
+        "mac": "ctrl+l ctrl+h",
+        "command": "latex-workshop.showMathPreview"
+      },
       {
         "key": "ctrl+l alt+b",
         "mac": "cmd+l alt+b",

@@ -7,10 +7,12 @@ import {MathPreview, TexMathEnv} from '../components/mathpreview'
 export class HoverProvider implements vscode.HoverProvider {
     extension: Extension
     mathPreview: MathPreview
+    verbose: boolean = false
 
     constructor(extension: Extension) {
         this.extension = extension
         this.mathPreview = this.extension.mathPreview
+        extension.hoverProvider = this
     }
 
     public provideHover(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken) :
@@ -23,7 +25,10 @@ export class HoverProvider implements vscode.HoverProvider {
             const hovCitation = configuration.get('hover.citation.enabled') as boolean
             const hovCommand = configuration.get('hover.command.enabled') as boolean
             if (hov) {
-                const tex = this.mathPreview.findMathEnvOnBeginEnvname(document, position)
+                let tex = this.mathPreview.findMathEnvOnBeginEnvname(document, position)
+                if (!tex && this.verbose) {
+                    tex = this.mathPreview.findMathEnvIncludingPosition(document, position)
+                }
                 if (tex) {
                     const newCommands = await this.mathPreview.findNewCommand(document.getText())
                     this.provideHoverOnTex(document, tex, newCommands)

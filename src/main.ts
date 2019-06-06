@@ -222,7 +222,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('latex-workshop.revealOutputDir', () => extension.commander.revealOutputDir())
     vscode.commands.registerCommand('latex-workshop-dev.parselog', () => extension.commander.devParseLog())
     vscode.commands.registerCommand('latex-workshop.showMathPreview', () => extension.commander.showMathPreview())
-    vscode.commands.registerCommand('latex-workshop.toggleRealtimeMathPreview', () => extension.mathPreviewInsetManager.toggleMathPreviewInset())
+    vscode.commands.registerCommand('latex-workshop.toggleRealtimeMathPreview', () => extension.commander.toggleMathPreviewInset())
 
     vscode.commands.registerCommand('latex-workshop.shortcut.item', () => extension.commander.insertSnippet('item'))
     vscode.commands.registerCommand('latex-workshop.shortcut.emph', () => extension.commander.toggleSelectedKeyword('emph'))
@@ -281,8 +281,8 @@ export async function activate(context: vscode.ExtensionContext) {
             extension.linter.lintActiveFileIfEnabledAfterInterval()
         }
     }))
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
-        extension.mathPreviewInsetManager.updateMathPreviewInset(e.document)
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (e: vscode.TextDocumentChangeEvent) => {
+        await extension.mathPreviewInsetManager.updateMathPreviewInset(e.document)
     }))
 
     let isLaTeXActive = false

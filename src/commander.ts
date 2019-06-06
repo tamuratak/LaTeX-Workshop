@@ -750,4 +750,11 @@ export class Commander {
             this.extension.hoverProvider.verbose = false
         }
     }
+
+    toggleMathPreviewInset() {
+        const inset = this.extension.mathPreviewInsetManager.toggleMathPreviewInset()
+        if (inset) {
+            this.extension.mathPreviewInsetManager.updateMathPreviewInset(inset.editor.document)
+        }
+    }
 }

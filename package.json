@@ -6,6 +6,7 @@
   "version": "7.0.2",
   "publisher": "James-Yu",
   "license": "MIT",
+  "enableProposedApi": true,
   "homepage": "https://github.com/James-Yu/LaTeX-Workshop",
   "repository": {
     "type": "git",

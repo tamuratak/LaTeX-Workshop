@@ -8,6 +8,7 @@ import {Logger} from './components/logger'
 import {BuildInfo} from './components/buildinfo'
 import {Manager} from './components/manager'
 import {MathPreview} from './components/mathpreview'
+import {MathPreviewInsetManager} from './components/insetmanager'
 import {Builder} from './components/builder'
 import {Viewer} from './components/viewer'
 import {Server} from './components/server'
@@ -221,6 +222,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('latex-workshop.revealOutputDir', () => extension.commander.revealOutputDir())
     vscode.commands.registerCommand('latex-workshop-dev.parselog', () => extension.commander.devParseLog())
     vscode.commands.registerCommand('latex-workshop.showMathPreview', () => extension.commander.showMathPreview())
+    vscode.commands.registerCommand('latex-workshop.toggleRealtimeMathPreview', () => extension.mathPreviewInsetManager.toggleMathPreviewInset())
 
     vscode.commands.registerCommand('latex-workshop.shortcut.item', () => extension.commander.insertSnippet('item'))
     vscode.commands.registerCommand('latex-workshop.shortcut.emph', () => extension.commander.toggleSelectedKeyword('emph'))
@@ -278,6 +280,9 @@ export async function activate(context: vscode.ExtensionContext) {
         if (extension.manager.hasTexId(e.document.languageId)) {
             extension.linter.lintActiveFileIfEnabledAfterInterval()
         }
+    }))
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
+        extension.mathPreviewInsetManager.updateMathPreviewInset(e.document)
     }))
 
     let isLaTeXActive = false
@@ -384,6 +389,7 @@ export class Extension {
     structureViewer: StructureTreeView
     hoverProvider: HoverProvider
     mathPreview: MathPreview
+    mathPreviewInsetManager: MathPreviewInsetManager
 
     constructor() {
         this.extensionRoot = path.resolve(`${__dirname}/../../`)
@@ -406,6 +412,7 @@ export class Extension {
         this.structureProvider = new SectionNodeProvider(this)
         this.structureViewer = new StructureTreeView(this)
         this.mathPreview = new MathPreview(this)
+        this.mathPreviewInsetManager = new MathPreviewInsetManager(this)
 
         this.logger.addLogMessage(`LaTeX Workshop initialized.`)
     }

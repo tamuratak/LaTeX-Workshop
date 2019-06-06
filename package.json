@@ -298,6 +298,11 @@
         "command": "latex-workshop.showMathPreview",
         "title": "Show Math Preview",
         "category": "LaTeX Workshop"
+      },
+      {
+        "command": "latex-workshop.toggleRealtimeMathPreview",
+        "title": "Toggle Realtime Math Preview",
+        "category": "LaTeX Workshop"
       }
     ],
     "keybindings": [
@@ -305,6 +310,11 @@
         "key": "ctrl+l ctrl+h",
         "mac": "ctrl+l ctrl+h",
         "command": "latex-workshop.showMathPreview"
+      },
+      {
+        "key": "ctrl+l ctrl+i",
+        "mac": "ctrl+l ctrl+i",
+        "command": "latex-workshop.toggleRealtimeMathPreview"
       },
       {
         "key": "ctrl+l alt+b",

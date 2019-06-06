@@ -114,6 +114,22 @@ export class MathPreview {
         return newTex
     }
 
+    async generateSVG(document: vscode.TextDocument, tex: TexMathEnv) {
+        const newCommands = await this.findNewCommand(document.getText())
+        const configuration = vscode.workspace.getConfiguration('latex-workshop')
+        const scale = configuration.get('hover.preview.scale') as number
+        const s = this.mathjaxify(tex.texString, tex.envname)
+        const data = await this.mj.typeset({
+            math: newCommands + this.stripTeX(s),
+            format: 'TeX',
+            svgNode: true,
+        })
+        this.scaleSVG(data, scale)
+        this.colorSVG(data)
+        const xml = data.svgNode.outerHTML
+        return this.svgToDataUrl(xml)
+    }
+
     scaleSVG(data: any, scale: number) {
         const svgelm = data.svgNode
         // w0[2] and h0[2] are units, i.e., pt, ex, em, ...

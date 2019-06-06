@@ -30,6 +30,9 @@ export class MathPreviewInsetManager {
             try {
                 const inset = vscode.window.createWebviewTextEditorInset(editor, range, {enableScripts: true})
                 this.previewInsets.set(document, inset)
+                inset.webview.onDidReceiveMessage((message) => {
+                    console.log(message)
+                })
                 inset.webview.html = `<!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -38,8 +41,28 @@ export class MathPreviewInsetManager {
                     <script>
                     window.addEventListener('message', event => {
                         const message = event.data; // The JSON data our extension sent
-                        const img = document.getElementById('math');
-                        img.src = message;
+                        switch (message.type) {
+                          case "mathImage":
+                            const img = document.getElementById('math');
+                            img.onload = () => {
+                              const vscode = acquireVsCodeApi();
+                              vscode.postMessage({
+                                  type: "sizeInfo",
+                                  window: {
+                                      width: window.innerWidth,
+                                      height: window.innerHeight
+                                  },
+                                  img: {
+                                      width: img.width,
+                                      height: img.height
+                                  }
+                              })
+                            }
+                            img.src = message.src;
+                            break;
+                          default:
+                            break;
+                        }
                     });
                     </script>
                 </head>
@@ -73,6 +96,6 @@ export class MathPreviewInsetManager {
             return
         }
         const svgDataUrl = await this.mathPreview.generateSVG(document, texMath)
-        return inset.webview.postMessage(svgDataUrl)
+        return inset.webview.postMessage({type: "mathImage", src: svgDataUrl})
     }
 }

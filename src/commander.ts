@@ -744,10 +744,10 @@ export class Commander {
 
     async showMathPreview() {
         try {
-            this.extension.hoverProvider.showHoverAggresively = true
+            this.extension.hoverProvider.verbose = true
             await vscode.commands.executeCommand('editor.action.showHover')
         } finally {
-            this.extension.hoverProvider.showHoverAggresively = false
+            this.extension.hoverProvider.verbose = false
         }
     }
 }

@@ -741,4 +741,13 @@ export class Commander {
         await vscode.window.activeTextEditor.document.save()
         setTimeout(() => this.extension.builder.disableBuildAfterSave = false, 1000)
     }
+
+    async showMathPreview() {
+        try {
+            this.extension.hoverProvider.showHoverAggresively = true
+            await vscode.commands.executeCommand('editor.action.showHover')
+        } finally {
+            this.extension.hoverProvider.showHoverAggresively = false
+        }
+    }
 }

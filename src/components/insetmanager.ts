@@ -6,7 +6,7 @@ type InsetInfo = {
     enabled: boolean,
     context?: {
         inset: vscode.WebviewEditorInset,
-        left: number,
+        align: string,
         height: number,
         texMathRange?: vscode.Range
     }
@@ -23,13 +23,13 @@ export class MathPreviewInsetManager {
         this.previewInsets = new Map()
     }
 
-    createMathPreviewInset(editor: vscode.TextEditor) {
+    createMathPreviewInset(editor: vscode.TextEditor, lineHeight?: number) {
         const document = editor.document
         const position = editor.selection.active
-        const [range, left, lineNumAsHeight] = this.calcInsetRangeAndLeft(document, position)
+        const [range, align, lineNumAsHeight] = this.calcInsetRangeAndLeft(document, position, lineHeight)
         try {
             const inset = vscode.window.createWebviewTextEditorInset(editor, range, {enableScripts: true})
-            const insetInfo = {enabled: true, context: {inset, left, height: lineNumAsHeight}}
+            const insetInfo = {enabled: true, context: {inset, align, height: lineNumAsHeight}}
             this.previewInsets.set(document, insetInfo)
             inset.webview.onDidReceiveMessage( async (message) => {
                 switch (message.type) {
@@ -37,11 +37,7 @@ export class MathPreviewInsetManager {
                         if (message.img.height > message.window.height) {
                             inset.dispose()
                             const lnHeight = message.img.height / message.window.height * lineNumAsHeight + 2
-                            const newRange = new vscode.Range(range.start.line, range.start.character, range.start.line + lnHeight, 0)
-                            const newInset = vscode.window.createWebviewTextEditorInset(editor, newRange, {enableScripts: true})
-                            const newInsetInfo = {enabled: true, context: {inset: newInset, left, height: lnHeight}}
-                            this.previewInsets.set(document, newInsetInfo)
-                            newInset.webview.html = this.getImgHtml(left)
+                            this.createMathPreviewInset(editor, lnHeight)
                             await this.updateMathPreviewInset(document)
                         }
                         break
@@ -49,7 +45,13 @@ export class MathPreviewInsetManager {
                         break
                 }
             })
-            inset.webview.html = this.getImgHtml(left)
+            inset.onDidDispose( () => {
+                const info = this.previewInsets.get(document)
+                if (info) {
+                    info.context = undefined
+                }
+            })
+            inset.webview.html = this.getImgHtml(align)
             return inset
         } catch (e) {
             console.log(e)
@@ -100,28 +102,33 @@ export class MathPreviewInsetManager {
         return
     }
 
-    calcInsetRangeAndLeft(document: vscode.TextDocument, position: vscode.Position) : [vscode.Range, number, number] {
+    calcInsetRangeAndLeft(document: vscode.TextDocument, position: vscode.Position, lineHeight?: number) : [vscode.Range, string, number] {
         let texMath = this.mathPreview.findInlineMath(document, position)
         let posBegin = position
         let lineNumAsHeight: number
-        let left = 0
+        let align = ''
         const editorWidth = 74
         if (texMath) {
             lineNumAsHeight = 3
             const col = texMath.range.start.character
-            left = col / editorWidth * 100
+            const left = col / editorWidth * 100
+            align = `left: ${left}%;`
         } else {
             lineNumAsHeight = 10
+            align = `display: block; margin: auto;`
             texMath = this.getTexMath(document, position)
             if (texMath) {
                 posBegin = texMath.range.end
             }
         }
+        if (lineHeight) {
+            lineNumAsHeight = lineHeight
+        }
         const posEnd = new vscode.Position(posBegin.line + lineNumAsHeight, 0)
-        return [new vscode.Range(posBegin, posEnd), left, lineNumAsHeight]
+        return [new vscode.Range(posBegin, posEnd), align, lineNumAsHeight]
     }
 
-    getImgHtml(left: number) {
+    getImgHtml(align: string) {
         return `<!DOCTYPE html>
         <html lang="en">
         <head>
@@ -130,33 +137,37 @@ export class MathPreviewInsetManager {
             <script>
             const vscode = acquireVsCodeApi();
             window.addEventListener('message', event => {
-                const message = event.data; // The JSON data our extension sent
-                switch (message.type) {
-                  case "mathImage":
-                    const img = document.getElementById('math');
-                    img.onload = () => {
+              const message = event.data; // The JSON data our extension sent
+              switch (message.type) {
+                case "mathImage":
+                  const img = document.getElementById('math');
+                  img.onload = () => {
+                    if (img.height > window.innerHeight) {
                       vscode.postMessage({
-                          type: "sizeInfo",
-                          window: {
-                              width: window.innerWidth,
-                              height: window.innerHeight
-                          },
-                          img: {
-                              width: img.width,
-                              height: img.height
-                          }
-                      })
+                        type: "sizeInfo",
+                        window: {
+                          width: window.innerWidth,
+                          height: window.innerHeight
+                        },
+                        img: {
+                          width: img.width,
+                          height: img.height
+                        }
+                      });
+                    } else {
+                      img.style.visibility = 'visible';
                     }
-                    img.src = message.src;
-                    break;
-                  default:
-                    break;
-                }
+                  }
+                  img.src = message.src;
+                  break;
+                default:
+                  break;
+              }
             });
             </script>
         </head>
         <body>
-            <div style="width: 100%;"><img style="margin-top: 10px; position: relative; left: ${left}%;" src="" id="math" /></div>
+            <div style="width: 100%;"><img style="visibility: hidden; margin-top: 10px; position: relative; ${align}%;" src="" id="math" /></div>
         </body>
         </html>`
     }

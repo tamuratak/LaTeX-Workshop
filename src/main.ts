@@ -281,8 +281,14 @@ export async function activate(context: vscode.ExtensionContext) {
             extension.linter.lintActiveFileIfEnabledAfterInterval()
         }
     }))
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (e: vscode.TextDocumentChangeEvent) => {
+
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (e) => {
         await extension.mathPreviewInsetManager.updateMathPreviewInset(e.document)
+    }))
+    context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(async (e) => {
+        setTimeout( async () => {
+            await extension.mathPreviewInsetManager.moveInsetIfNeeded(e.textEditor)
+        }, 150)
     }))
 
     let isLaTeXActive = false

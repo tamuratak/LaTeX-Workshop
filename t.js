@@ -1,10 +1,10 @@
+const vscode = acquireVsCodeApi();
 window.addEventListener('message', event => {
   const message = event.data; // The JSON data our extension sent
   switch (message.type) {
     case "mathImage":
       const img = document.getElementById('math');
       img.onload = () => {
-        const vscode = acquireVsCodeApi();
         vscode.postMessage({
             type: "sizeInfo",
             window: {

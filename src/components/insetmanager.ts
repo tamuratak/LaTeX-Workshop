@@ -64,7 +64,7 @@ export class MathPreviewInsetManager {
                 posBegin = texMath.range.end
             }
         }
-        const posEnd = new vscode.Position(position.line + lineNumAsHeight, 0)
+        const posEnd = new vscode.Position(posBegin.line + lineNumAsHeight, 0)
         return [new vscode.Range(posBegin, posEnd), left]
     }
 
@@ -103,7 +103,7 @@ export class MathPreviewInsetManager {
             </script>
         </head>
         <body>
-            <div style="width: 100%;"><img style="position: relative; left: ${left}%;" src="" id="math" /></div>
+            <div style="width: 100%;"><img style="margin-top: 10px; position: relative; left: ${left}%;" src="" id="math" /></div>
         </body>
         </html>`
     }

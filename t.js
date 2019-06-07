@@ -5,17 +5,21 @@ window.addEventListener('message', event => {
     case "mathImage":
       const img = document.getElementById('math');
       img.onload = () => {
-        vscode.postMessage({
+        if (img.height > window.innerHeight) {
+          vscode.postMessage({
             type: "sizeInfo",
             window: {
-                width: window.innerWidth,
-                height: window.innerHeight
+              width: window.innerWidth,
+              height: window.innerHeight
             },
             img: {
-                width: img.width,
-                height: img.height
+              width: img.width,
+              height: img.height
             }
-        })
+          });
+        } else {
+          img.style.visibility = 'visible';
+        }
       }
       img.src = message.src;
       break;

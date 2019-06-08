@@ -742,15 +742,6 @@ export class Commander {
         setTimeout(() => this.extension.builder.disableBuildAfterSave = false, 1000)
     }
 
-    async showMathPreview() {
-        try {
-            this.extension.hoverProvider.verbose = true
-            await vscode.commands.executeCommand('editor.action.showHover')
-        } finally {
-            this.extension.hoverProvider.verbose = false
-        }
-    }
-
     toggleMathPreviewInset() {
         const inset = this.extension.mathPreviewInsetManager.toggleMathPreviewInset()
         if (inset) {

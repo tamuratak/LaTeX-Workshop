@@ -1213,6 +1213,11 @@
           "default": true,
           "markdownDescription": "Render Hover Preview on \\ref."
         },
+        "latex-workshop.inset.mathpreview.delay": {
+          "type": "number",
+          "default": 70,
+          "markdownDescription": "Delay to display real-time math preview to avoid an unintended selection. In milliseconds."
+        },
         "latex-workshop.intellisense.optionalArgsEntries.enabled": {
           "type": "boolean",
           "default": true,

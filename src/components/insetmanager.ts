@@ -31,7 +31,7 @@ export class MathPreviewInsetManager {
             this.previewInsets.set(document, insetInfo)
             inset.webview.onDidReceiveMessage( async (message) => {
                 switch (message.type) {
-                    case "sizeInfo":
+                    case 'sizeInfo':
                         if (message.img.height > message.window.height) {
                             inset.dispose()
                             const lnHeight = message.img.height / message.window.height * lineNumAsHeight + 2
@@ -176,17 +176,17 @@ export class MathPreviewInsetManager {
             return
         }
         const position = editor.selection.active
-        let texMath = this.getTexMath(document, position)
+        const texMath = this.getTexMath(document, position)
         if (!texMath) {
             return
         }
         context.texMathRange = texMath.range
         const svgDataUrl = await this.mathPreview.generateSVG(document, texMath)
-        return inset.webview.postMessage({type: "mathImage", src: svgDataUrl})
+        return inset.webview.postMessage({type: 'mathImage', src: svgDataUrl})
     }
 
     getTexMath(document: vscode.TextDocument, position: vscode.Position) {
-        let texMath = this.mathPreview.findInlineMath(document, position)
+        const texMath = this.mathPreview.findInlineMath(document, position)
         if (texMath) {
             return texMath
         }

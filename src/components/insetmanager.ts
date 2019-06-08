@@ -1,12 +1,12 @@
 import * as vscode from 'vscode'
-import {MathPreview} from './mathpreview'
+import {MathPreview, TexMathEnv} from './mathpreview'
 import {Extension} from '../main'
 
 type InsetInfo = {
     enabled: boolean,
     context?: {
         inset: vscode.WebviewEditorInset,
-        texMathRange?: vscode.Range
+        curTexMath?: TexMathEnv
     }
 }
 
@@ -45,7 +45,7 @@ export class MathPreviewInsetManager {
             })
             inset.onDidDispose( () => {
                 const info = this.previewInsets.get(document)
-                if (info) {
+                if (info && info.context && info.context.inset === inset) {
                     info.context = undefined
                 }
             })
@@ -66,8 +66,15 @@ export class MathPreviewInsetManager {
         const context = insetInfo.context
         const position = editor.selection.active
         if (context) {
-            if (context.texMathRange && context.texMathRange.contains(position)) {
-                return
+            const curTexMath = context.curTexMath
+            if (curTexMath) {
+                if (curTexMath.range.contains(position)) {
+                    return
+                }
+                if (curTexMath.envname === '$' && curTexMath.range.start.line === position.line) {
+                    this.updateMathPreviewInset(document)
+                    return
+                }
             }
             insetInfo.context = undefined
             context.inset.dispose()
@@ -180,7 +187,7 @@ export class MathPreviewInsetManager {
         if (!texMath) {
             return
         }
-        context.texMathRange = texMath.range
+        context.curTexMath = texMath
         const svgDataUrl = await this.mathPreview.generateSVG(document, texMath)
         return inset.webview.postMessage({type: 'mathImage', src: svgDataUrl})
     }

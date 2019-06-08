@@ -285,9 +285,11 @@ export async function activate(context: vscode.ExtensionContext) {
         await extension.mathPreviewInsetManager.updateMathPreviewInset(e.document)
     }))
     context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(async (e) => {
-        setTimeout( async () => {
-            await extension.mathPreviewInsetManager.moveInsetIfNeeded(e.textEditor)
-        }, 150)
+        const configuration = vscode.workspace.getConfiguration('latex-workshop')
+        const delay = configuration.get('inset.mathpreview.delay') as number
+        setTimeout( () => {
+            extension.mathPreviewInsetManager.moveInsetIfNeeded(e.textEditor)
+        }, delay)
     }))
 
     let isLaTeXActive = false

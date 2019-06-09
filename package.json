@@ -1212,7 +1212,7 @@
         "latex-workshop.inset.mathpreview.delay": {
           "type": "number",
           "default": 70,
-          "markdownDescription": "Delay to display real-time math preview to avoid an unintended selection. In milliseconds."
+          "markdownDescription": "Delay to display real-time math preview to avoid an unintended selection, in milliseconds."
         },
         "latex-workshop.intellisense.optionalArgsEntries.enabled": {
           "type": "boolean",

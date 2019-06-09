@@ -3,15 +3,13 @@ import {MathPreview, TexMathEnv} from './mathpreview'
 import {Extension} from '../main'
 
 type InsetInfo = {
-    enabled: boolean,
-    context?: {
-        inset: vscode.WebviewEditorInset,
-        curTexMath?: TexMathEnv
-    }
+    inset?: vscode.WebviewEditorInset,
+    curTexMath?: TexMathEnv
 }
 
 export class MathPreviewInsetManager {
     extension: Extension
+    toggleFlag: boolean = false
     mathPreview: MathPreview
     previewInsets: Map<vscode.TextDocument, InsetInfo>
 
@@ -27,7 +25,7 @@ export class MathPreviewInsetManager {
         const [range, lineNumAsHeight] = this.calcInsetRangeAndLeft(document, position, lineHeight)
         try {
             const inset = vscode.window.createWebviewTextEditorInset(editor, range, {enableScripts: true})
-            const insetInfo = {enabled: true, context: {inset}}
+            const insetInfo: InsetInfo = {inset}
             this.previewInsets.set(document, insetInfo)
             inset.webview.onDidReceiveMessage( async (message) => {
                 switch (message.type) {
@@ -45,8 +43,8 @@ export class MathPreviewInsetManager {
             })
             inset.onDidDispose( () => {
                 const info = this.previewInsets.get(document)
-                if (info && info.context && info.context.inset === inset) {
-                    info.context = undefined
+                if (info && info.inset === inset) {
+                    info.inset = undefined
                 }
             })
             inset.webview.html = this.getImgHtml()
@@ -59,14 +57,16 @@ export class MathPreviewInsetManager {
 
     moveInsetIfNeeded(editor: vscode.TextEditor) {
         const document = editor.document
-        const insetInfo = this.previewInsets.get(document)
-        if (!insetInfo || !insetInfo.enabled) {
+        if (document.languageId !== 'latex' || !this.toggleFlag) {
             return
         }
-        const context = insetInfo.context
+        const insetInfo = this.previewInsets.get(document)
+        if (!this.toggleFlag) {
+            return
+        }
         const position = editor.selection.active
-        if (context) {
-            const curTexMath = context.curTexMath
+        if (insetInfo && insetInfo.inset) {
+            const curTexMath = insetInfo.curTexMath
             if (curTexMath) {
                 if (curTexMath.range.contains(position)) {
                     return
@@ -76,8 +76,7 @@ export class MathPreviewInsetManager {
                     return
                 }
             }
-            insetInfo.context = undefined
-            context.inset.dispose()
+            insetInfo.inset.dispose()
         }
         const texMath = this.getTexMath(document, position)
         if (!texMath) {
@@ -93,15 +92,15 @@ export class MathPreviewInsetManager {
             return
         }
         const document = editor.document
-        const insetInfo = this.previewInsets.get(document)
-        if (insetInfo && insetInfo.enabled) {
-            insetInfo.enabled = false
-            const context = insetInfo.context
-            if (context) {
-                context.inset.dispose()
-                insetInfo.context = undefined
+        if (this.toggleFlag) {
+            this.toggleFlag = false
+            const insetInfo = this.previewInsets.get(document)
+            if (insetInfo && insetInfo.inset) {
+                insetInfo.inset.dispose()
+                insetInfo.inset = undefined
             }
         } else {
+            this.toggleFlag = true
             return this.createMathPreviewInset(editor)
         }
         return
@@ -173,11 +172,10 @@ export class MathPreviewInsetManager {
 
     async updateMathPreviewInset(document: vscode.TextDocument) {
         const insetInfo = this.previewInsets.get(document)
-        if (!insetInfo || !insetInfo.enabled || !insetInfo.context) {
+        if (!insetInfo || !this.toggleFlag || !insetInfo.inset) {
             return
         }
-        const context = insetInfo.context
-        const inset = context.inset
+        const inset = insetInfo.inset
         const editor = vscode.window.activeTextEditor
         if (!editor) {
             return
@@ -187,7 +185,7 @@ export class MathPreviewInsetManager {
         if (!texMath) {
             return
         }
-        context.curTexMath = texMath
+        insetInfo.curTexMath = texMath
         const svgDataUrl = await this.mathPreview.generateSVG(document, texMath)
         return inset.webview.postMessage({type: 'mathImage', src: svgDataUrl})
     }

@@ -174,7 +174,7 @@ export class MathPreviewInsetManager {
             });
             </script>
         </head>
-        <body style="">
+        <body>
             <div id="mathBlock"><img src="" id="math" /></div>
         </body>
         </html>`

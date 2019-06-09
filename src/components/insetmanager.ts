@@ -156,19 +156,13 @@ export class MathPreviewInsetManager {
                     if (img.height > window.innerHeight) {
                       vscode.postMessage({
                         type: "sizeInfo",
-                        window: {
-                          width: window.innerWidth,
-                          height: window.innerHeight
-                        },
-                        img: {
-                          width: img.width,
-                          height: img.height
-                        }
+                        window: { width: window.innerWidth, height: window.innerHeight },
+                        img: { width: img.width, height: img.height }
                       });
                     } else {
                       const mathBlock = document.getElementById('mathBlock');
-                      img.style.top = (window.innerHeight - img.height) / 2 + 'px';
                       mathBlock.style.height = window.innerHeight + 'px';
+                      img.style.top = (window.innerHeight - img.height) / 2 + 'px';
                       img.style.visibility = 'visible';
                     }
                   }

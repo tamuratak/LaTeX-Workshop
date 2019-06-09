@@ -317,17 +317,21 @@ export class MathPreview {
 
     findMathEnvIncludingPosition(document: vscode.TextDocument, position: vscode.Position) : TexMathEnv | undefined {
         const envBeginPatMathMode = /\\begin\{(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)\}/
+        let texMath = this.findMathEnvOnBeginEnvname(document, position)
+        if (texMath) {
+            return texMath
+        }
         const beginPos = this.findBeginPair(document, envBeginPatMathMode, position)
         if (beginPos) {
-            const t = this.findMathEnvOnBeginEnvname(document, beginPos)
-            if (t) {
-                const beginEndRange = t.range
+            texMath = this.findMathEnvOnBeginEnvname(document, beginPos)
+            if (texMath) {
+                const beginEndRange = texMath.range
                 if (beginEndRange.contains(position)) {
-                    return t
+                    return texMath
                 }
             }
         }
-        return undefined
+        return
     }
 
     getFirstRmemberedSubstring(s: string, pat: RegExp) : string {

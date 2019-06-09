@@ -1218,6 +1218,15 @@
           "default": 70,
           "markdownDescription": "Delay to display real-time math preview to avoid an unintended selection, in milliseconds."
         },
+        "latex-workshop.inset.mathpreview.whenToDisplay": {
+          "type": "string",
+          "default": "always",
+          "enum": [
+            "always",
+            "onlyOnMath"
+          ],
+          "markdownDescription": "Specify when to display inset for real-time math preview."
+        },
         "latex-workshop.inset.mathpreview.inlineMath.height": {
           "type": "number",
           "default": 3,

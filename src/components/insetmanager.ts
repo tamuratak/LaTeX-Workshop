@@ -4,7 +4,8 @@ import {Extension} from '../main'
 
 type InsetInfo = {
     inset?: vscode.WebviewEditorInset,
-    curTexMath?: TexMathEnv
+    curTexMath?: TexMathEnv,
+    curLine: number
 }
 
 export class MathPreviewInsetManager {
@@ -25,7 +26,7 @@ export class MathPreviewInsetManager {
         const [range, lineNumAsHeight] = this.getInsetRangeAndHeight(document, position, lineHeight)
         try {
             const inset = vscode.window.createWebviewTextEditorInset(editor, range, {enableScripts: true})
-            const insetInfo: InsetInfo = {inset}
+            const insetInfo: InsetInfo = {inset, curLine: position.line}
             this.previewInsets.set(document, insetInfo)
             inset.webview.onDidReceiveMessage( async (message) => {
                 switch (message.type) {
@@ -56,30 +57,29 @@ export class MathPreviewInsetManager {
     }
 
     moveInsetIfNeeded(editor: vscode.TextEditor) {
+        const configuration = vscode.workspace.getConfiguration('latex-workshop')
+        const whenToDisplay = configuration.get('inset.mathpreview.whenToDisplay') as string
         const document = editor.document
         if (document.languageId !== 'latex' || !this.toggleFlag) {
             return
         }
         const insetInfo = this.previewInsets.get(document)
-        if (!this.toggleFlag) {
-            return
-        }
         const position = editor.selection.active
         if (insetInfo && insetInfo.inset) {
+            if (insetInfo.curLine === position.line && whenToDisplay === 'always') {
+                this.updateMathPreviewInset(document)
+                return
+            }
             const curTexMath = insetInfo.curTexMath
             if (curTexMath) {
                 if (curTexMath.range.contains(position)) {
-                    return
-                }
-                if (curTexMath.envname === '$' && curTexMath.range.start.line === position.line) {
-                    this.updateMathPreviewInset(document)
                     return
                 }
             }
             insetInfo.inset.dispose()
         }
         const texMath = this.getTexMath(document, position)
-        if (!texMath) {
+        if (!texMath && whenToDisplay !== 'always') {
             return
         }
         this.createMathPreviewInset(editor)
@@ -108,10 +108,10 @@ export class MathPreviewInsetManager {
 
     getInsetRangeAndHeight(document: vscode.TextDocument, position: vscode.Position, lineHeight?: number) : [vscode.Range, number] {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
-        let texMath = this.mathPreview.findInlineMath(document, position)
+        let texMath = this.getTexMath(document, position)
         let posBegin = position
         let lineNumAsHeight: number
-        if (texMath) {
+        if (!texMath || texMath.envname === '$') {
             lineNumAsHeight = configuration.get('inset.mathpreview.inlineMath.height') as number
         } else {
             lineNumAsHeight = configuration.get('inset.mathpreview.displayMath.height') as number
@@ -217,7 +217,9 @@ export class MathPreviewInsetManager {
     getTexMath(document: vscode.TextDocument, position: vscode.Position) {
         const texMath = this.mathPreview.findInlineMath(document, position)
         if (texMath) {
-            return texMath
+            if (texMath.range.start.character !== position.character && texMath.range.end.character !== position.character) {
+                return texMath
+            }
         }
         return this.mathPreview.findMathEnvIncludingPosition(document, position)
     }

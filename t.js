@@ -15,6 +15,15 @@ window.addEventListener('message', event => {
           const mathBlock = document.getElementById('mathBlock');
           mathBlock.style.height = window.innerHeight + 'px';
           img.style.top = (window.innerHeight - img.height) / 2 + 'px';
+          if (img.width >= window.innerWidth) {
+            img.style.left = '0px';
+          } else {
+            const leftRatio = message.leftRatio;
+            img.style.left = (window.innerWidth - img.width) * leftRatio + 'px';
+            window.addEventListener('resize', () => {
+              img.style.left = (window.innerWidth - img.width) * leftRatio + 'px';
+            })
+          }
           img.style.visibility = 'visible';
         }
       }

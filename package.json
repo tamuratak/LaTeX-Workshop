@@ -1214,6 +1214,16 @@
           "default": 70,
           "markdownDescription": "Delay to display real-time math preview to avoid an unintended selection, in milliseconds."
         },
+        "latex-workshop.inset.mathpreview.inlineMath.height": {
+          "type": "number",
+          "default": 3,
+          "markdownDescription": "Default height of real-time math preview for inline math. The height expands if needed."
+        },
+        "latex-workshop.inset.mathpreview.displayMath.height": {
+          "type": "number",
+          "default": 10,
+          "markdownDescription": "Default height of real-time math preview for display math. The height expands if needed."
+        },
         "latex-workshop.intellisense.optionalArgsEntries.enabled": {
           "type": "boolean",
           "default": true,

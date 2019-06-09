@@ -22,7 +22,7 @@ export class MathPreviewInsetManager {
     createMathPreviewInset(editor: vscode.TextEditor, lineHeight?: number) {
         const document = editor.document
         const position = editor.selection.active
-        const [range, lineNumAsHeight] = this.calcInsetRangeAndLeft(document, position, lineHeight)
+        const [range, lineNumAsHeight] = this.getInsetRangeAndHeight(document, position, lineHeight)
         try {
             const inset = vscode.window.createWebviewTextEditorInset(editor, range, {enableScripts: true})
             const insetInfo: InsetInfo = {inset}
@@ -106,7 +106,7 @@ export class MathPreviewInsetManager {
         return
     }
 
-    calcInsetRangeAndLeft(document: vscode.TextDocument, position: vscode.Position, lineHeight?: number) : [vscode.Range, number] {
+    getInsetRangeAndHeight(document: vscode.TextDocument, position: vscode.Position, lineHeight?: number) : [vscode.Range, number] {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         let texMath = this.mathPreview.findInlineMath(document, position)
         let posBegin = position

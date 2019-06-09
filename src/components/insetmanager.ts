@@ -132,6 +132,18 @@ export class MathPreviewInsetManager {
         <head>
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; img-src data:; style-src 'unsafe-inline';">
             <meta charset="UTF-8">
+            <style>
+                #mathBlock {
+                    width: 100%;
+                }
+                #math {
+                    visibility: hidden;
+                    position: relative;
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+            </style>
             <script>
             const vscode = acquireVsCodeApi();
             window.addEventListener('message', event => {
@@ -153,6 +165,9 @@ export class MathPreviewInsetManager {
                         }
                       });
                     } else {
+                      const mathBlock = document.getElementById('mathBlock');
+                      img.style.top = (window.innerHeight - img.height) / 2 + 'px';
+                      mathBlock.style.height = window.innerHeight + 'px';
                       img.style.visibility = 'visible';
                     }
                   }
@@ -164,8 +179,8 @@ export class MathPreviewInsetManager {
             });
             </script>
         </head>
-        <body>
-            <div style="width: 100%;"><img style="visibility: hidden; margin-top: 10px; position: relative; display: block; margin: auto;" src="" id="math" /></div>
+        <body style="">
+            <div id="mathBlock"><img src="" id="math" /></div>
         </body>
         </html>`
     }

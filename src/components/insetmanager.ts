@@ -141,8 +141,6 @@ export class MathPreviewInsetManager {
                     visibility: hidden;
                     position: relative;
                     display: block;
-                    margin-left: auto;
-                    margin-right: auto;
                 }
             </style>
             <script>
@@ -163,6 +161,15 @@ export class MathPreviewInsetManager {
                       const mathBlock = document.getElementById('mathBlock');
                       mathBlock.style.height = window.innerHeight + 'px';
                       img.style.top = (window.innerHeight - img.height) / 2 + 'px';
+                      if (img.width >= window.innerWidth) {
+                        img.style.left = '0px';
+                      } else {
+                        const leftRatio = message.leftRatio;
+                        img.style.left = (window.innerWidth - img.width) * leftRatio + 'px';
+                        window.addEventListener('resize', () => {
+                          img.style.left = (window.innerWidth - img.width) * leftRatio + 'px';
+                        })
+                      }
                       img.style.visibility = 'visible';
                     }
                   }
@@ -197,7 +204,14 @@ export class MathPreviewInsetManager {
         }
         insetInfo.curTexMath = texMath
         const svgDataUrl = await this.mathPreview.generateSVG(document, texMath)
-        return inset.webview.postMessage({type: 'mathImage', src: svgDataUrl})
+        const configuration = vscode.workspace.getConfiguration('latex-workshop')
+        let leftRatio: number
+        if (texMath.envname === '$') {
+            leftRatio = configuration.get('inset.mathpreview.inlineMath.left') as number
+        } else {
+            leftRatio = configuration.get('inset.mathpreview.displayMath.left') as number
+        }
+        return inset.webview.postMessage({type: 'mathImage', src: svgDataUrl, leftRatio})
     }
 
     getTexMath(document: vscode.TextDocument, position: vscode.Position) {

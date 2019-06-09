@@ -18,6 +18,9 @@ window.addEventListener('message', event => {
             }
           });
         } else {
+          const mathBlock = document.getElementById('mathBlock');
+          img.style.top = (window.innerHeight - img.height) / 2 + 'px';
+          mathBlock.style.height = window.innerHeight + 'px';
           img.style.visibility = 'visible';
         }
       }

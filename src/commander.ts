@@ -743,9 +743,6 @@ export class Commander {
     }
 
     toggleMathPreviewInset() {
-        const inset = this.extension.mathPreviewInsetManager.toggleMathPreviewInset()
-        if (inset) {
-            this.extension.mathPreviewInsetManager.updateMathPreviewInset(inset.editor.document)
-        }
+        this.extension.mathPreviewInsetManager.toggleMathPreviewInset()
     }
 }

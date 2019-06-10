@@ -22,6 +22,9 @@ export class MathPreviewInsetManager {
 
     createMathPreviewInset(editor: vscode.TextEditor, lineHeight?: number) {
         const document = editor.document
+        if (document.languageId !== 'latex') {
+            return
+        }
         const position = editor.selection.active
         const [range, lineNumAsHeight] = this.getInsetRangeAndHeight(document, position, lineHeight)
         try {
@@ -34,8 +37,9 @@ export class MathPreviewInsetManager {
                         if (message.img.height > message.window.height) {
                             inset.dispose()
                             const lnHeight = message.img.height / message.window.height * lineNumAsHeight + 2
-                            this.createMathPreviewInset(editor, lnHeight)
-                            await this.updateMathPreviewInset(document)
+                            if (this.createMathPreviewInset(editor, lnHeight)) {
+                                await this.updateMathPreviewInset(document)
+                            }
                         }
                         break
                     default:
@@ -82,8 +86,10 @@ export class MathPreviewInsetManager {
         if (!texMath && whenToDisplay !== 'always') {
             return
         }
-        this.createMathPreviewInset(editor)
-        this.updateMathPreviewInset(document)
+        // move
+        if (this.createMathPreviewInset(editor)) {
+            this.updateMathPreviewInset(document)
+        }
     }
 
     toggleMathPreviewInset() {
@@ -101,7 +107,9 @@ export class MathPreviewInsetManager {
             }
         } else {
             this.toggleFlag = true
-            return this.createMathPreviewInset(editor)
+            if (this.createMathPreviewInset(editor)) {
+                this.updateMathPreviewInset(document)
+            }
         }
         return
     }
@@ -188,6 +196,9 @@ export class MathPreviewInsetManager {
     }
 
     async updateMathPreviewInset(document: vscode.TextDocument) {
+        if (document.languageId !== 'latex') {
+            return
+        }
         const insetInfo = this.previewInsets.get(document)
         if (!insetInfo || !this.toggleFlag || !insetInfo.inset) {
             return
@@ -215,12 +226,15 @@ export class MathPreviewInsetManager {
     }
 
     getTexMath(document: vscode.TextDocument, position: vscode.Position) {
-        const texMath = this.mathPreview.findInlineMath(document, position)
+        const texMath = this.mathPreview.findMathEnvIncludingPosition(document, position)
         if (texMath) {
+            if (texMath.envname !== '$') {
+                return texMath
+            }
             if (texMath.range.start.character !== position.character && texMath.range.end.character !== position.character) {
                 return texMath
             }
         }
-        return this.mathPreview.findMathEnvIncludingPosition(document, position)
+        return
     }
 }

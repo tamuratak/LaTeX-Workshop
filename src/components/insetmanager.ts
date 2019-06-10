@@ -116,17 +116,14 @@ export class MathPreviewInsetManager {
 
     getInsetRangeAndHeight(document: vscode.TextDocument, position: vscode.Position, lineHeight?: number) : [vscode.Range, number] {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
-        let texMath = this.getTexMath(document, position)
+        const texMath = this.getTexMath(document, position)
         let posBegin = position
         let lineNumAsHeight: number
         if (!texMath || texMath.envname === '$') {
             lineNumAsHeight = configuration.get('inset.mathpreview.inlineMath.height') as number
         } else {
             lineNumAsHeight = configuration.get('inset.mathpreview.displayMath.height') as number
-            texMath = this.getTexMath(document, position)
-            if (texMath) {
-                posBegin = texMath.range.end
-            }
+            posBegin = texMath.range.end
         }
         if (lineHeight) {
             lineNumAsHeight = lineHeight

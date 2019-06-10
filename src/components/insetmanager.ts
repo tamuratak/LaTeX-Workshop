@@ -117,19 +117,19 @@ export class MathPreviewInsetManager {
     getInsetRangeAndHeight(document: vscode.TextDocument, position: vscode.Position, lineHeight?: number) : [vscode.Range, number] {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const texMath = this.getTexMath(document, position)
-        let posBegin = position
+        let insetBegin = position
         let lineNumAsHeight: number
         if (!texMath || texMath.envname === '$') {
             lineNumAsHeight = configuration.get('inset.mathpreview.inlineMath.height') as number
         } else {
             lineNumAsHeight = configuration.get('inset.mathpreview.displayMath.height') as number
-            posBegin = texMath.range.end
+            insetBegin = texMath.range.end
         }
         if (lineHeight) {
             lineNumAsHeight = lineHeight
         }
-        const posEnd = new vscode.Position(posBegin.line + lineNumAsHeight, 0)
-        return [new vscode.Range(posBegin, posEnd), lineNumAsHeight]
+        const insetEnd = new vscode.Position(insetBegin.line + lineNumAsHeight, 0)
+        return [new vscode.Range(insetBegin, insetEnd), lineNumAsHeight]
     }
 
     getImgHtml() {

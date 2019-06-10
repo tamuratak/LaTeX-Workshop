@@ -1230,7 +1230,7 @@
         "latex-workshop.inset.mathpreview.inlineMath.left": {
           "type": "number",
           "default": 0.5,
-          "markdownDescription": "The ratio of the margin-left of real-time math preview for inline math."
+          "markdownDescription": "The ratio of the margin-left of real-time math preview for inline math, between 0 and 1."
         },
         "latex-workshop.inset.mathpreview.displayMath.height": {
           "type": "number",

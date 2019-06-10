@@ -149,6 +149,10 @@ export class MathPreviewInsetManager {
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; img-src data:; style-src 'unsafe-inline';">
             <meta charset="UTF-8">
             <style>
+                body {
+                    padding: 0;
+                    margin: 0;
+                }
                 #mathBlock {
                     width: 100%;
                 }

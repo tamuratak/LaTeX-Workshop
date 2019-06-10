@@ -80,7 +80,11 @@ export class MathPreviewInsetManager {
                     return
                 }
             }
-            insetInfo.inset.dispose()
+            setTimeout(() => {
+                if (insetInfo && insetInfo.inset) {
+                    insetInfo.inset.dispose()
+                }
+            }, 150)
         }
         const texMath = this.getTexMath(document, position)
         if (!texMath && whenToDisplay !== 'always') {

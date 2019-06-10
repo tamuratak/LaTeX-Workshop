@@ -316,9 +316,10 @@ export class MathPreview {
     }
 
     findMathEnvIncludingPosition(document: vscode.TextDocument, position: vscode.Position) : TexMathEnv | undefined {
-        const envBeginPatMathMode = /\\begin\{(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)\}/
+        const envNamePatMathMode = /(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)/
+        const envBeginPatMathMode = /\\\[|\\\(|\\begin\{(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)\}/
         let texMath = this.findMathEnvOnBeginEnvname(document, position)
-        if (texMath) {
+        if (texMath && texMath.envname.match(envNamePatMathMode)) {
             return texMath
         }
         const beginPos = this.findBeginPair(document, envBeginPatMathMode, position)

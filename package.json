@@ -1212,7 +1212,7 @@
         "latex-workshop.inset.mathpreview.delay": {
           "type": "number",
           "default": 70,
-          "markdownDescription": "Delay, in milliseconds, to display real-time math preview to prevent an unintended selection."
+          "markdownDescription": "Delay, in milliseconds, to display a new inset to prevent an unintended selection."
         },
         "latex-workshop.inset.mathpreview.whenToDisplay": {
           "type": "string",
@@ -1221,7 +1221,7 @@
             "always",
             "onlyOnMath"
           ],
-          "markdownDescription": "Specify when to display inset for real-time math preview."
+          "markdownDescription": "Specify when to display an inset for real-time math preview."
         },
         "latex-workshop.inset.mathpreview.inlineMath.height": {
           "type": "number",

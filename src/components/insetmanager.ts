@@ -5,7 +5,7 @@ import {Extension} from '../main'
 type InsetInfo = {
     inset?: vscode.WebviewEditorInset,
     curTexMath?: TexMathEnv,
-    curLine: number
+    readonly curLine: number
 }
 
 export class MathPreviewInsetManager {

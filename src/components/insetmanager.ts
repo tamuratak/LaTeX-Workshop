@@ -20,25 +20,25 @@ export class MathPreviewInsetManager {
         this.previewInsets = new Map()
     }
 
-    createMathPreviewInset(editor: vscode.TextEditor, lineHeight?: number) {
+    createMathPreviewInset(editor: vscode.TextEditor, lineHeight?: number, texMath0?: TexMathEnv) {
         const document = editor.document
         if (document.languageId !== 'latex') {
             return
         }
         const position = editor.selection.active
-        const [range, lineNumAsHeight] = this.getInsetRangeAndHeight(document, position, lineHeight)
+        const insetRangeInfo = this.getInsetRangeAndHeight(document, position, lineHeight, texMath0)
         try {
-            const inset = vscode.window.createWebviewTextEditorInset(editor, range, {enableScripts: true})
-            const insetInfo: InsetInfo = {inset, curLine: position.line}
+            const inset = vscode.window.createWebviewTextEditorInset(editor, insetRangeInfo.range, {enableScripts: true})
+            const insetInfo: InsetInfo = {inset, curLine: position.line, curTexMath: insetRangeInfo.texMath}
             this.previewInsets.set(document, insetInfo)
             inset.webview.onDidReceiveMessage( async (message) => {
                 switch (message.type) {
                     case 'sizeInfo':
                         if (message.img.height > message.window.height) {
                             inset.dispose()
-                            const lnHeight = message.img.height / message.window.height * lineNumAsHeight + 2
-                            if (this.createMathPreviewInset(editor, lnHeight)) {
-                                await this.updateMathPreviewInset(document)
+                            const lnHeight = message.img.height / message.window.height * insetRangeInfo.lineNumAsHeight + 2
+                            if (this.createMathPreviewInset(editor, lnHeight, insetRangeInfo.texMath)) {
+                                await this.updateMathPreviewInset(document, insetRangeInfo.texMath)
                             }
                         }
                         break
@@ -53,7 +53,7 @@ export class MathPreviewInsetManager {
                 }
             })
             inset.webview.html = this.getImgHtml()
-            return inset
+            return insetInfo
         } catch (e) {
             console.log(e)
         }
@@ -87,8 +87,8 @@ export class MathPreviewInsetManager {
             return
         }
         // move
-        if (this.createMathPreviewInset(editor)) {
-            this.updateMathPreviewInset(document)
+        if (this.createMathPreviewInset(editor, undefined, texMath)) {
+            this.updateMathPreviewInset(document, texMath)
         }
     }
 
@@ -107,16 +107,17 @@ export class MathPreviewInsetManager {
             }
         } else {
             this.toggleFlag = true
-            if (this.createMathPreviewInset(editor)) {
-                this.updateMathPreviewInset(document)
+            const insetInfo = this.createMathPreviewInset(editor)
+            if (insetInfo) {
+                this.updateMathPreviewInset(document, insetInfo.curTexMath)
             }
         }
         return
     }
 
-    getInsetRangeAndHeight(document: vscode.TextDocument, position: vscode.Position, lineHeight?: number) : [vscode.Range, number] {
+    getInsetRangeAndHeight(document: vscode.TextDocument, position: vscode.Position, lineHeight?: number, texMath0?: TexMathEnv) {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
-        const texMath = this.getTexMath(document, position)
+        const texMath = texMath0 ? texMath0 : this.getTexMath(document, position)
         let insetBegin = position
         let lineNumAsHeight: number
         if (!texMath || texMath.envname === '$') {
@@ -129,7 +130,7 @@ export class MathPreviewInsetManager {
             lineNumAsHeight = lineHeight
         }
         const insetEnd = new vscode.Position(insetBegin.line + lineNumAsHeight, 0)
-        return [new vscode.Range(insetBegin, insetEnd), lineNumAsHeight]
+        return {range: new vscode.Range(insetBegin, insetEnd), lineNumAsHeight, texMath}
     }
 
     getImgHtml() {
@@ -192,7 +193,7 @@ export class MathPreviewInsetManager {
         </html>`
     }
 
-    async updateMathPreviewInset(document: vscode.TextDocument) {
+    async updateMathPreviewInset(document: vscode.TextDocument, texMath0?: TexMathEnv) {
         if (document.languageId !== 'latex') {
             return
         }
@@ -206,7 +207,7 @@ export class MathPreviewInsetManager {
             return
         }
         const position = editor.selection.active
-        const texMath = this.getTexMath(document, position)
+        const texMath = texMath0 ? texMath0 : this.getTexMath(document, position)
         if (!texMath) {
             return
         }

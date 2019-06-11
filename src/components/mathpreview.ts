@@ -63,7 +63,7 @@ export class MathPreview {
         if (!configuration.get('hover.preview.newcommand.parseTeXFile.enabled') as boolean) {
             return commandsString
         }
-        const regex = /(\\(?:(?:(?:re)?new|provide)command(\*)?(?:\[[^\[\]\{\}]*\])*{.*})|\\(?:def\\[a-zA-Z]+(?:#[0-9])*{.*}))/gm
+        const regex = /(\\(?:(?:(?:re)?new|provide)command(\*)?{\\[a-zA-Z]+}(?:\[[^\[\]\{\}]*\])*{.*})|\\(?:def\\[a-zA-Z]+(?:#[0-9])*{.*}))/gm
         const commands: string[] = []
         const noCommentContent = content.replace(/([^\\]|^)%.*$/gm, '$1') // Strip comments
         let result

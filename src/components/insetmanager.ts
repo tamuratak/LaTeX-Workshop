@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+import * as path from 'path'
 import {MathPreview, TexMathEnv} from './mathpreview'
 import {Extension} from '../main'
 
@@ -32,12 +33,17 @@ export class MathPreviewInsetManager {
         }
         const position = editor.selection.active
         const insetRangeInfo = this.getInsetRangeAndHeight(document, position, opt)
+        const extensionRoot = vscode.Uri.file(this.extension.extensionRoot)
+        const localResourceRoot = extensionRoot.with( { path: path.join(extensionRoot.path, './inset') })
         try {
             const inset = vscode.window.createWebviewTextEditorInset(
                 editor,
                 insetRangeInfo.insetStartLine,
                 insetRangeInfo.lineNumAsHeight,
-                {enableScripts: true}
+                {
+                    enableScripts: true,
+                    localResourceRoots: [localResourceRoot]
+                }
             )
             const insetInfo: InsetInfo = {inset, curLine: position.line, curTexMath: insetRangeInfo.texMath}
             this.previewInsets.set(document, insetInfo)
@@ -147,10 +153,12 @@ export class MathPreviewInsetManager {
     }
 
     getImgHtml() {
+        const root = vscode.Uri.file(this.extension.extensionRoot)
+        const jsPath = root.with( { scheme: 'vscode-resource', path: path.join(root.path, './inset/mathpreview.js') }).toString()
         return `<!DOCTYPE html>
         <html lang="en">
         <head>
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; img-src data:; style-src 'unsafe-inline';">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src vscode-resource:; img-src data:; style-src 'unsafe-inline';">
             <meta charset="UTF-8">
             <style>
                 body {
@@ -166,43 +174,7 @@ export class MathPreviewInsetManager {
                     display: block;
                 }
             </style>
-            <script>
-            const vscode = acquireVsCodeApi();
-            window.addEventListener('message', event => {
-              const message = event.data; // The JSON data our extension sent
-              switch (message.type) {
-                case "mathImage":
-                  const img = document.getElementById('math');
-                  img.onload = () => {
-                    if (img.height > window.innerHeight) {
-                      vscode.postMessage({
-                        type: "sizeInfo",
-                        window: { width: window.innerWidth, height: window.innerHeight },
-                        img: { width: img.width, height: img.height }
-                      });
-                    } else {
-                      const mathBlock = document.getElementById('mathBlock');
-                      mathBlock.style.height = window.innerHeight + 'px';
-                      img.style.top = (window.innerHeight - img.height) / 2 + 'px';
-                      if (img.width >= window.innerWidth) {
-                        img.style.left = '0px';
-                      } else {
-                        const leftRatio = message.leftRatio;
-                        img.style.left = (window.innerWidth - img.width) * leftRatio + 'px';
-                        window.addEventListener('resize', () => {
-                          img.style.left = (window.innerWidth - img.width) * leftRatio + 'px';
-                        })
-                      }
-                      img.style.visibility = 'visible';
-                    }
-                  }
-                  img.src = message.src;
-                  break;
-                default:
-                  break;
-              }
-            });
-            </script>
+            <script src='${jsPath}'></script>
         </head>
         <body>
             <div id="mathBlock"><img src="" id="math" /></div>

@@ -33,7 +33,12 @@ export class MathPreviewInsetManager {
         const position = editor.selection.active
         const insetRangeInfo = this.getInsetRangeAndHeight(document, position, opt)
         try {
-            const inset = vscode.window.createWebviewTextEditorInset(editor, insetRangeInfo.range, {enableScripts: true})
+            const inset = vscode.window.createWebviewTextEditorInset(
+                editor,
+                insetRangeInfo.insetStartLine,
+                insetRangeInfo.lineNumAsHeight,
+                {enableScripts: true}
+            )
             const insetInfo: InsetInfo = {inset, curLine: position.line, curTexMath: insetRangeInfo.texMath}
             this.previewInsets.set(document, insetInfo)
             inset.webview.onDidReceiveMessage( async (message) => {
@@ -127,19 +132,18 @@ export class MathPreviewInsetManager {
     getInsetRangeAndHeight(document: vscode.TextDocument, position: vscode.Position, opt?: OptArg) {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const texMath = opt && opt.texMath ? opt.texMath : this.getTexMath(document, position)
-        let insetBegin = position
+        let insetStartLine = position.line
         let lineNumAsHeight: number
         if (!texMath || texMath.envname === '$') {
             lineNumAsHeight = configuration.get('inset.mathpreview.inlineMath.height') as number
         } else {
             lineNumAsHeight = configuration.get('inset.mathpreview.displayMath.height') as number
-            insetBegin = texMath.range.end
+            insetStartLine = texMath.range.end.line
         }
         if (opt && opt.lineNumAsHeight !== undefined) {
             lineNumAsHeight = opt.lineNumAsHeight
         }
-        const insetEnd = new vscode.Position(insetBegin.line + lineNumAsHeight, 0)
-        return {range: new vscode.Range(insetBegin, insetEnd), lineNumAsHeight, texMath}
+        return {insetStartLine, lineNumAsHeight, texMath}
     }
 
     getImgHtml() {

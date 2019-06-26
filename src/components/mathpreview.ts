@@ -319,7 +319,7 @@ export class MathPreview {
         const envNamePatMathMode = /(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)/
         const envBeginPatMathMode = /\\\[|\\\(|\\begin\{(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)\}/
         let texMath = this.findMathEnvOnBeginEnvname(document, position)
-        if (texMath && texMath.envname.match(envNamePatMathMode)) {
+        if (texMath && (texMath.envname === '$' || texMath.envname.match(envNamePatMathMode))) {
             return texMath
         }
         const beginPos = this.findBeginPair(document, envBeginPatMathMode, position)

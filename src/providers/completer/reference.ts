@@ -24,7 +24,7 @@ export class Reference {
         // Update the dirty content in active text editor
         if (vscode.window.activeTextEditor) {
             const content = vscode.window.activeTextEditor.document.getText()
-            const refs = this.getReferenceFromAST(latexParser.parse(content), content.split('\n'))
+            const refs = this.getReferenceFromNodeArray(latexParser.parse(content).content, content.split('\n'))
             this.extension.manager.cachedContent[vscode.window.activeTextEditor.document.uri.fsPath].element.reference = refs
         }
         // Extract cached references
@@ -57,42 +57,49 @@ export class Reference {
     }
 
     update(file: string, content: string) {
-        const refs = this.getReferenceFromAST(latexParser.parse(content), content.split('\n'))
+        const refs = this.getReferenceFromNodeArray(latexParser.parse(content).content, content.split('\n'))
         this.extension.manager.cachedContent[file].element.reference = refs
     }
 
-    private getReferenceFromAST(ast: latexParser.LatexAst | latexParser.Node, lines: string[], nextNode?: latexParser.Node): vscode.CompletionItem[] {
+    private getReferenceFromNodeArray(nodes: latexParser.Node[], lines: string[]): vscode.CompletionItem[] {
+        let refs: vscode.CompletionItem[] = []
+        for (let index = 0; index < nodes.length; ++index) {
+            if (index < nodes.length - 1) {
+                // Also pass the next node to handle cases like `label={some-text}`
+                refs = refs.concat(this.getReferenceFromNode(nodes[index], lines, nodes[index+1]))
+            } else {
+                refs = refs.concat(this.getReferenceFromNode(nodes[index], lines))
+            }
+        }
+        return refs
+    }
+
+    private getReferenceFromNode(node: latexParser.Node, lines: string[], nextNode?: latexParser.Node): vscode.CompletionItem[] {
         let refs: vscode.CompletionItem[] = []
         let label = ''
-        if (ast.kind === 'command' && ast.name === 'label') {
+        if (latexParser.isCommand(node) && node.name === 'label') {
             // \label{some-text}
-            label = (ast.args.filter(arg => arg.kind === 'arg.group')[0].content[0] as latexParser.TextString).content
-        } else if (ast.kind === 'text.string' && ast.content === 'label=' && nextNode !== undefined) {
+            const group = node.args.filter(latexParser.isGroup)[0]
+            label = group ? latexParser.stringify(group.content) : label
+        } else if (latexParser.isTextString(node) && node.content === 'label=' && nextNode !== undefined) {
             // label={some=text}
-            label = ((nextNode as latexParser.Group).content[0] as latexParser.TextString).content
+            if (latexParser.isGroup(nextNode)) {
+                label = latexParser.stringify(nextNode.content)
+            }
         }
-        if (label !== '' && (ast.kind === 'command' || ast.kind === 'text.string')) {
+        if (label !== '' && (latexParser.isCommand(node) || latexParser.isTextString(node))) {
             refs.push({
                 label,
                 kind: vscode.CompletionItemKind.Reference,
-                documentation: lines.slice(ast.location.start.line - 2, ast.location.end.line + 4).join('\n'),
-                range: new vscode.Range(ast.location.start.line - 1, ast.location.start.column,
-                                        ast.location.end.line - 1, ast.location.end.column)
+                documentation: lines.slice(node.location.start.line - 2, node.location.end.line + 4).join('\n'),
+                range: new vscode.Range(node.location.start.line - 1, node.location.start.column,
+                                        node.location.end.line - 1, node.location.end.column)
             })
             // Here we abuse the definition of range to store the location of the reference definition
             return refs
         }
-        if (ast.hasOwnProperty('content') && Array.isArray(ast['content'])) {
-            // AstRoot | AstPreamble | non-label nodes -> loop in all its contents
-            const nodes = ast['content'] as latexParser.Node[]
-            for (let index = 0; index < nodes.length; ++index) {
-                if (index < nodes.length - 1) {
-                    // Also pass the next node to handle cases like `label={some-text}`
-                    refs = refs.concat(this.getReferenceFromAST(nodes[index], lines, nodes[index+1]))
-                } else {
-                    refs = refs.concat(this.getReferenceFromAST(nodes[index], lines))
-                }
-            }
+        if (latexParser.hasContentArray(node)) {
+            refs = refs.concat(this.getReferenceFromNodeArray(node.content, lines))
         }
         return refs
     }

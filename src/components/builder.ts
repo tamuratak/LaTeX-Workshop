@@ -63,7 +63,7 @@ export class Builder {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         this.disableBuildAfterSave = true
         await vscode.workspace.saveAll()
-        setTimeout(() => this.disableBuildAfterSave = false, configuration.get('latex.autoBuild.interval', 1000) as number)
+        setTimeout(() => this.disableBuildAfterSave = false, configuration.get('latex.autoBuild.interval', 1000))
         const releaseWaiting = await this.waitingForBuildToFinishMutex.acquire()
         const releaseBuildMutex = await this.buildMutex.acquire()
         releaseWaiting()
@@ -337,7 +337,7 @@ export class Builder {
             this.extension.logger.addLogMessage('SyncTex after build invoked.')
             this.extension.locator.syncTeX(undefined, undefined, pdfFile)
         }
-        if (configuration.get('latex.autoClean.run') as string === 'onBuilt') {
+        if (configuration.get('latex.autoClean.run') === 'onBuilt') {
             this.extension.logger.addLogMessage('Auto Clean invoked.')
             this.extension.cleaner.clean(rootFile)
         }
@@ -370,7 +370,7 @@ export class Builder {
                 return undefined
             }
             let recipe = recipes[0]
-            if ((configuration.get('latex.recipe.default') as string === 'lastUsed') && (this.previouslyUsedRecipe !== undefined)) {
+            if ((configuration.get('latex.recipe.default') === 'lastUsed') && (this.previouslyUsedRecipe !== undefined)) {
                 recipe = this.previouslyUsedRecipe
             }
             if (recipeName) {

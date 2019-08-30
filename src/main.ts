@@ -177,7 +177,7 @@ function newVersionMessage(extensionPath: string, extension: Extension) {
         }
         fs.writeFileSync(`${extensionPath}${path.sep}VERSION`, extension.packageInfo.version)
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
-        if (!(configuration.get('message.update.show') as boolean)) {
+        if (!configuration.get('message.update.show')) {
             return
         }
         vscode.window.showInformationMessage(`LaTeX Workshop updated to version ${extension.packageInfo.version}.`,

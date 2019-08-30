@@ -126,7 +126,7 @@ export class HoverProvider implements vscode.HoverProvider {
             }
         }
         commandsString = commandsString.replace(/^\s*$/gm, '')
-        if (!configuration.get('hover.preview.newcommand.parseTeXFile.enabled') as boolean) {
+        if (!configuration.get('hover.preview.newcommand.parseTeXFile.enabled')) {
             return commandsString
         }
         let commands: string[] = []
@@ -234,7 +234,7 @@ export class HoverProvider implements vscode.HoverProvider {
         const link = vscode.Uri.parse('command:latex-workshop.synctexto').with({ query: JSON.stringify([line, refData.file]) })
         const mdLink = new vscode.MarkdownString(`[View on pdf](${link})`)
         mdLink.isTrusted = true
-        if (configuration.get('hover.ref.enabled') as boolean) {
+        if (configuration.get('hover.ref.enabled')) {
             const tex = this.findHoverOnRef(document, position, token, refData)
             if (tex) {
                 const newCommands = await this.findNewCommand(document.getText())
@@ -244,7 +244,7 @@ export class HoverProvider implements vscode.HoverProvider {
         const md = '```latex\n' + refData.documentation + '\n```\n'
         const refRange = document.getWordRangeAtPosition(position, /\{.*?\}/)
         const refNumberMessage = this.refNumberMessage(refData)
-        if (refNumberMessage !== undefined && configuration.get('hover.ref.number.enabled') as boolean) {
+        if (refNumberMessage !== undefined && configuration.get('hover.ref.number.enabled')) {
             return new vscode.Hover([md, refNumberMessage, mdLink], refRange)
         }
         return new vscode.Hover([md, mdLink], refRange)
@@ -255,7 +255,7 @@ export class HoverProvider implements vscode.HoverProvider {
         const scale = configuration.get('hover.preview.scale') as number
 
         let tag: string
-        if (refData.prevIndex !== undefined && configuration.get('hover.ref.number.enabled') as boolean) {
+        if (refData.prevIndex !== undefined && configuration.get('hover.ref.number.enabled')) {
             tag = refData.prevIndex.refNumber
         } else {
             tag = refData.label

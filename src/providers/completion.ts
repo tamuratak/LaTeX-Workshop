@@ -79,7 +79,7 @@ export class Completer implements vscode.CompletionItemProvider {
                 if (suggestions.length > 0) {
                     if (type === 'citation') {
                         const configuration = vscode.workspace.getConfiguration('latex-workshop')
-                        if (configuration.get('intellisense.citation.type') as string === 'browser') {
+                        if (configuration.get('intellisense.citation.type') === 'browser') {
                             resolve()
                             setTimeout(() => this.citation.browser({document, position, token, context}), 10)
                             return

@@ -682,7 +682,7 @@ export class Manager {
 
     private buildOnFileChanged(file: string, bibChanged: boolean = false) {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
-        if (configuration.get('latex.autoBuild.run') as string !== 'onFileChange') {
+        if (configuration.get('latex.autoBuild.run') !== 'onFileChange') {
             return
         }
         if (this.extension.builder.disableBuildAfterSave) {

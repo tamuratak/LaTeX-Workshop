@@ -156,7 +156,9 @@ export class Locator {
             }
         } else {
             this.invokeSyncTeXCommandForward(line, character, filePath, pdfFile).then( (record) => {
-                this.extension.viewer.syncTeX(pdfFile as string, record)
+                if (pdfFile !== undefined) {
+                    this.extension.viewer.syncTeX(pdfFile, record)
+                }
             })
         }
     }

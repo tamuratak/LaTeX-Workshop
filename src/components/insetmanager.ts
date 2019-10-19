@@ -34,7 +34,7 @@ export class MathPreviewInsetManager {
         const position = editor.selection.active
         const insetRangeInfo = this.getInsetRangeAndHeight(document, position, opt)
         const extensionRoot = vscode.Uri.file(this.extension.extensionRoot)
-        const localResourceRoot = extensionRoot.with( { path: path.join(extensionRoot.path, './inset') })
+        const localResourceRoot = extensionRoot.with( { path: path.join(extensionRoot.path, './resources/inset') })
         try {
             const inset = vscode.window.createWebviewTextEditorInset(
                 editor,
@@ -154,7 +154,7 @@ export class MathPreviewInsetManager {
 
     getImgHtml() {
         const root = vscode.Uri.file(this.extension.extensionRoot)
-        const jsPath = root.with( { scheme: 'vscode-resource', path: path.join(root.path, './inset/mathpreview.js') }).toString()
+        const jsPath = root.with( { scheme: 'vscode-resource', path: path.join(root.path, './resources/inset/mathpreview.js') }).toString()
         return `<!DOCTYPE html>
         <html lang="en">
         <head>

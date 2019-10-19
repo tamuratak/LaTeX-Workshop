@@ -6,6 +6,7 @@
   "version": "8.2.0",
   "publisher": "James-Yu",
   "license": "MIT",
+  "enableProposedApi": true,
   "homepage": "https://github.com/James-Yu/LaTeX-Workshop",
   "repository": {
     "type": "git",
@@ -1539,7 +1540,7 @@
     "@types/micromatch": "^3.0.0",
     "@types/node": "^10.12.12",
     "@types/tmp": "^0.0.33",
-    "@types/vscode": "1.34.0",
+    "@types/vscode": "1.39.0",
     "@types/workerpool": "^5.0.0",
     "@types/ws": "^4.0.2",
     "@typescript-eslint/eslint-plugin": "^2.1.0",

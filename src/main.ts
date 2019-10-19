@@ -323,6 +323,13 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }))
 
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (e) => {
+        await extension.mathPreviewInsetManager.updateMathPreviewInset(e.document)
+    }))
+    context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection((e) => {
+        extension.mathPreviewInsetManager.moveInsetIfNeeded(e.textEditor)
+    }))
+
     let isLaTeXActive = false
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor | undefined) => {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')

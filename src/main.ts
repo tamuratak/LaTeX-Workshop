@@ -22,6 +22,7 @@ import {Completer} from './providers/completion'
 import {CodeActions} from './providers/codeactions'
 import {HoverProvider} from './providers/hover'
 import {MathPreview} from './providers/preview/mathpreview'
+import {MathPreviewInsetManager} from './components/insetmanager'
 import {DocSymbolProvider} from './providers/docsymbol'
 import {ProjectSymbolProvider} from './providers/projectsymbol'
 import {SectionNodeProvider, StructureTreeView} from './providers/structure'
@@ -244,6 +245,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('latex-workshop-dev.parselog', () => extension.commander.devParseLog())
     vscode.commands.registerCommand('latex-workshop-dev.parsetex', () => extension.commander.devParseTeX())
     vscode.commands.registerCommand('latex-workshop-dev.parsebib', () => extension.commander.devParseBib())
+    vscode.commands.registerCommand('latex-workshop.toggleRealtimeMathPreview', () => extension.commander.toggleMathPreviewInset())
 
     vscode.commands.registerCommand('latex-workshop.shortcut.item', () => extension.commander.insertSnippet('item'))
     vscode.commands.registerCommand('latex-workshop.shortcut.emph', () => extension.commander.toggleSelectedKeyword('emph'))
@@ -447,6 +449,7 @@ export class Extension {
     structureViewer: StructureTreeView
     snippetPanel: SnippetPanel
     mathPreview: MathPreview
+    mathPreviewInsetManager: MathPreviewInsetManager
 
     constructor() {
         this.extensionRoot = path.resolve(`${__dirname}/../../`)
@@ -470,6 +473,7 @@ export class Extension {
         this.snippetPanel = new SnippetPanel(this)
         this.pegParser = new PEGParser(this)
         this.mathPreview = new MathPreview(this)
+        this.mathPreviewInsetManager = new MathPreviewInsetManager(this)
         this.logger.addLogMessage('LaTeX Workshop initialized.')
     }
 }

@@ -684,4 +684,8 @@ export class Commander {
         await vscode.window.activeTextEditor.document.save()
         setTimeout(() => this.extension.builder.disableBuildAfterSave = false, 1000)
     }
+
+    toggleMathPreviewInset() {
+        this.extension.mathPreviewInsetManager.toggleMathPreviewInset()
+    }
 }

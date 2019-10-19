@@ -9,7 +9,7 @@ import {Extension} from '../../main'
 import {Suggestion as ReferenceEntry} from '../completer/reference'
 import {themeColorMap} from '../../utils'
 
-type TexMathEnv = { texString: string, range: vscode.Range, envname: string }
+export type TexMathEnv = { texString: string, range: vscode.Range, envname: string }
 
 export class MathPreview {
     extension: Extension
@@ -228,6 +228,22 @@ export class MathPreview {
         return newTex
     }
 
+    async generateSVG(document: vscode.TextDocument, tex: TexMathEnv) {
+        const newCommands = this.findNewCommand(document.getText())
+        const configuration = vscode.workspace.getConfiguration('latex-workshop')
+        const scale = configuration.get('hover.preview.scale') as number
+        const s = this.mathjaxify(tex.texString, tex.envname)
+        const data = await this.mj.typeset({
+            math: newCommands + this.stripTeX(s),
+            format: 'TeX',
+            svgNode: true,
+        })
+        this.scaleSVG(data, scale)
+        this.colorSVG(data)
+        const xml = data.svgNode.outerHTML
+        return this.svgToDataUrl(xml)
+    }
+
     private scaleSVG(data: any, scale: number) {
         const svgelm = data.svgNode
         // w0[2] and h0[2] are units, i.e., pt, ex, em, ...
@@ -414,6 +430,26 @@ export class MathPreview {
             }
         }
         return undefined
+    }
+
+    findMathEnvIncludingPosition(document: vscode.TextDocument, position: vscode.Position): TexMathEnv | undefined {
+        const envNamePatMathMode = /(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)/
+        const envBeginPatMathMode = /\\\[|\\\(|\\begin\{(align|align\*|alignat|alignat\*|eqnarray|eqnarray\*|equation|equation\*|gather|gather\*)\}/
+        let texMath = this.findHoverOnTex(document, position)
+        if (texMath && (texMath.envname === '$' || texMath.envname.match(envNamePatMathMode))) {
+            return texMath
+        }
+        const beginPos = this.findBeginPair(document, envBeginPatMathMode, position)
+        if (beginPos) {
+            texMath = this.findHoverOnTex(document, beginPos)
+            if (texMath) {
+                const beginEndRange = texMath.range
+                if (beginEndRange.contains(position)) {
+                    return texMath
+                }
+            }
+        }
+        return
     }
 
     private getFirstRmemberedSubstring(s: string, pat: RegExp): string {

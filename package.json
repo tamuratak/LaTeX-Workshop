@@ -457,9 +457,19 @@
         "command": "latex-workshop.bibalignsort",
         "title": "Sort and align BibTeX file",
         "category": "LaTeX Workshop"
+      },
+      {
+        "command": "latex-workshop.openMathPreviewPanel",
+        "title": "Open Math Preview Panel",
+        "category": "LaTeX Workshop"
       }
     ],
     "keybindings": [
+      {
+        "key": "ctrl+alt+m",
+        "mac": "cmd+alt+m",
+        "command": "latex-workshop.openMathPreviewPanel"
+      },
       {
         "key": "ctrl+l alt+b",
         "mac": "cmd+l alt+b",

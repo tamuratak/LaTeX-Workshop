@@ -26,6 +26,7 @@ import {CodeActions} from './providers/codeactions'
 import {HoverProvider} from './providers/hover'
 import {GraphicsPreview} from './providers/preview/graphicspreview'
 import {MathPreview} from './providers/preview/mathpreview'
+import {MathPreviewPanel} from './components/mathpreviewpanel'
 import {DocSymbolProvider} from './providers/docsymbol'
 import {ProjectSymbolProvider} from './providers/projectsymbol'
 import {SectionNodeProvider, StructureTreeView} from './providers/structure'
@@ -100,6 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('latex-workshop-dev.parselog', () => extension.commander.devParseLog())
     vscode.commands.registerCommand('latex-workshop-dev.parsetex', () => extension.commander.devParseTeX())
     vscode.commands.registerCommand('latex-workshop-dev.parsebib', () => extension.commander.devParseBib())
+    vscode.commands.registerCommand('latex-workshop.openMathPreviewPanel', () => extension.commander.openMathPreviewPanel())
 
     vscode.commands.registerCommand('latex-workshop.shortcut.item', () => extension.commander.insertSnippet('item'))
     vscode.commands.registerCommand('latex-workshop.shortcut.emph', () => extension.commander.toggleSelectedKeyword('emph'))
@@ -190,6 +192,13 @@ export function activate(context: vscode.ExtensionContext) {
                 extension.manager.updateCompleter(file, content)
             }, configuration.get('intellisense.update.delay', 1000))
         }
+    }))
+
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument( () => {
+        extension.mathPreviewPanel.update()
+    }))
+    context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection( () => {
+        extension.mathPreviewPanel.update()
     }))
 
     let isLaTeXActive = false
@@ -335,6 +344,7 @@ export class Extension {
     readonly graphicsPreview: GraphicsPreview
     readonly mathPreview: MathPreview
     readonly bibtexFormatter: BibtexFormatter
+    readonly mathPreviewPanel: MathPreviewPanel
 
     constructor() {
         this.extensionRoot = path.resolve(`${__dirname}/../../`)
@@ -365,6 +375,7 @@ export class Extension {
         this.graphicsPreview = new GraphicsPreview(this)
         this.mathPreview = new MathPreview(this)
         this.bibtexFormatter = new BibtexFormatter(this)
+        this.mathPreviewPanel = new MathPreviewPanel(this)
         this.logger.addLogMessage('LaTeX Workshop initialized.')
     }
 }

@@ -14,6 +14,7 @@
   "engines": {
     "vscode": "^1.34.0"
   },
+  "enableProposedApi": true,
   "categories": [
     "Programming Languages",
     "Snippets"
@@ -384,9 +385,19 @@
         "command": "latex-workshop.bibalignsort",
         "title": "Sort and align BibTeX file",
         "category": "LaTeX Workshop"
+      },
+      {
+        "command": "latex-workshop.toggleRealtimeMathPreview",
+        "title": "Toggle Realtime Math Preview",
+        "category": "LaTeX Workshop"
       }
     ],
     "keybindings": [
+      {
+        "key": "ctrl+l ctrl+i",
+        "mac": "ctrl+l ctrl+i",
+        "command": "latex-workshop.toggleRealtimeMathPreview"
+      },
       {
         "key": "ctrl+l alt+b",
         "mac": "cmd+l alt+b",
@@ -1507,6 +1518,35 @@
           ],
           "markdownDescription": "The color of cursor in Hover Preview."
         },
+        "latex-workshop.inset.mathpreview.whenToDisplay": {
+          "type": "string",
+          "default": "always",
+          "enum": [
+            "always",
+            "onlyOnMath"
+          ],
+          "markdownDescription": "Specify when to display an inset for real-time math preview."
+        },
+        "latex-workshop.inset.mathpreview.inlineMath.height": {
+          "type": "number",
+          "default": 3,
+          "markdownDescription": "Default height of real-time math preview for inline math. The height expands if needed."
+        },
+        "latex-workshop.inset.mathpreview.inlineMath.left": {
+          "type": "number",
+          "default": 0.5,
+          "markdownDescription": "The ratio of the margin-left of real-time math preview for inline math, between 0 and 1."
+        },
+        "latex-workshop.inset.mathpreview.displayMath.height": {
+          "type": "number",
+          "default": 10,
+          "markdownDescription": "Default height of real-time math preview for display math. The height expands if needed."
+        },
+        "latex-workshop.inset.mathpreview.displayMath.left": {
+          "type": "number",
+          "default": 0.5,
+          "markdownDescription": "The ratio of the margin-left of real-time math preview for display math."
+        },
         "latex-workshop.intellisense.optionalArgsEntries.enabled": {
           "type": "boolean",
           "default": true,
@@ -1745,7 +1785,7 @@
     "@types/mocha": "^7.0.2",
     "@types/node": "^12.12.17",
     "@types/tmp": "^0.0.33",
-    "@types/vscode": "1.34.0",
+    "@types/vscode": "1.39.0",
     "@types/workerpool": "^5.0.1",
     "@types/ws": "^5.1.1",
     "@typescript-eslint/eslint-plugin": "^2.19.0",

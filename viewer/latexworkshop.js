@@ -373,29 +373,24 @@ window.addEventListener('keydown', (evt) => {
 })
 
 let hideToolbarInterval = undefined
-function showToolbar(animate) {
-  if (hideToolbarInterval) {
-    clearInterval(hideToolbarInterval)
-  }
-  const d = document.getElementsByClassName('toolbar')[0]
-  d.className = d.className.replace(' hide', '') + (animate ? '' : ' notransition')
-
-  hideToolbarInterval = setInterval(() => {
-    if(!PDFViewerApplication.findBar.opened && !PDFViewerApplication.pdfSidebar.isOpen &&
-       !PDFViewerApplication.secondaryToolbar.isOpen) {
-      d.className = d.className.replace(' notransition', '') + ' hide'
-      clearInterval(hideToolbarInterval)
-    }
-  }, 3000)
-}
 
 document.addEventListener('pagesinit', () => {
-  document.getElementById('outerContainer').onmousemove = (e) => {
-    if (e.clientY <= 64) {
-      showToolbar(true)
+  const toolbar = document.getElementsByClassName('toolbar')[0]
+  toolbar.onmouseenter = () => {
+    if (hideToolbarInterval) {
+      clearInterval(hideToolbarInterval)
     }
+    toolbar.className = 'toolbar'
   }
-});
+  toolbar.onmouseleave = () => {
+    hideToolbarInterval = setInterval(() => {
+      if(!PDFViewerApplication.findBar.opened && !PDFViewerApplication.pdfSidebar.isOpen &&
+        !PDFViewerApplication.secondaryToolbar.isOpen) {
+          toolbar.className = 'toolbar hide'
+      }
+    }, 3000)
+  }
+}, { once: true });
 
 let currentUserSelectScale = undefined;
 let originalUserSelectIndex = undefined;

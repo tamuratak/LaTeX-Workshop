@@ -3,7 +3,6 @@ import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as cp from 'child_process'
 import * as tmp from 'tmp'
-import * as pdfjsLib from 'pdfjs-dist'
 import {Mutex} from '../lib/await-semaphore'
 
 import {Extension} from '../main'
@@ -180,9 +179,8 @@ export class Builder {
                     return p
                 })
             }
-            pdfjsLib.getDocument(this.extension.manager.tex2pdf(rootFile, true)).promise.then((doc: any) => {
-                this.extension.buildInfo.setPageTotal(doc.numPages)
-            })
+            const numPages = await this.extension.graphicsPreview.pdfRenderer.getNumPages(this.extension.manager.tex2pdf(rootFile, true))
+            this.extension.buildInfo.setPageTotal(numPages)
             // Create sub directories of output directory
             // This was supposed to create the outputDir as latexmk does not
             // take care of it (neither does any of latex command). If the

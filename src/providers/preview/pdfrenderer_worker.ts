@@ -49,6 +49,12 @@ async function renderToSvg(pdfPath: string, options: { height: number, width: nu
     return svg.toString()
 }
 
+async function getNumPages(pdfPath: string): Promise<number> {
+    const doc = await pdfjsLib.getDocument(pdfPath).promise
+    return doc.numPages
+}
+
 workerpool.worker({
-    renderToSvg
+    renderToSvg,
+    getNumPages
 })

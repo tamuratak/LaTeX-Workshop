@@ -16,4 +16,8 @@ export class PDFRenderer {
     renderToSVG(pdfPath: string, options: { height: number, width: number, pageNumber: number }): workerpool.Promise<string> {
         return this.pool.exec('renderToSvg', [pdfPath, options])
     }
+
+    getNumPages(pdfPath: string): workerpool.Promise<number> {
+        return this.pool.exec('getNumPages', [pdfPath])
+    }
 }

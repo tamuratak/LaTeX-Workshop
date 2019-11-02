@@ -395,7 +395,7 @@ document.addEventListener('pagesinit', () => {
       showToolbar(true)
     }
   }
-});
+}, { once: true });
 
 let currentUserSelectScale = undefined;
 let originalUserSelectIndex = undefined;
@@ -454,7 +454,7 @@ document.addEventListener('pagesinit', () => {
     o.selected = true;
     scaleSelect.dispatchEvent(e);
   });
-});
+}, { once: true });
 
 const trimPage = (page) => {
   const trimScale = getTrimScale();

@@ -1,0 +1,41 @@
+{
+  "name": "chokidar-child",
+  "version": "0.1.3",
+  "description": "wrap chokidar in a children process, so that it is crash free",
+  "main": "index.js",
+  "scripts": {
+    "lint": "standard",
+    "test": "tape test.js"
+  },
+  "pre-commit": [
+    "lint",
+    "test"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcollina/chokidar-child.git"
+  },
+  "keywords": [
+    "chokidar",
+    "child",
+    "process",
+    "fsevents",
+    "nscale"
+  ],
+  "author": "Matteo Collina <hello@matteocollina.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mcollina/chokidar-children/issues"
+  },
+  "homepage": "https://github.com/mcollina/chokidar-children",
+  "dependencies": {
+    "chokidar": "^1.0.0"
+  },
+  "devDependencies": {
+    "pre-commit": "^1.0.6",
+    "standard": "^3.3.0",
+    "tape": "^3.5.0",
+    "tmp": "0.0.25",
+    "tmpdir": "^1.0.1"
+  }
+}

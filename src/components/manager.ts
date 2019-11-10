@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as chokidar from 'chokidar'
+import * as chokidarChild from '../lib/chokidar-child'
 import * as micromatch from 'micromatch'
 import * as utils from '../utils/utils'
 
@@ -31,8 +32,8 @@ export class Manager {
     cachedContent: Content = {}
 
     private extension: Extension
-    private fileWatcher?: chokidar.FSWatcher
-    private bibWatcher?: chokidar.FSWatcher
+    private fileWatcher?: chokidarChild.Watcher
+    private bibWatcher?: chokidarChild.Watcher
     private filesWatched: string[] = []
     private bibsWatched: string[] = []
     private watcherOptions: chokidar.WatchOptions = {
@@ -604,7 +605,7 @@ export class Manager {
     private createFileWatcher() {
         this.extension.logger.addLogMessage(`Instantiating a new file watcher for ${this.rootFile}`)
         if (this.rootFile) {
-            this.fileWatcher = chokidar.watch(this.rootFile, this.watcherOptions)
+            this.fileWatcher = chokidarChild.watch(this.rootFile, this.watcherOptions)
             this.filesWatched.push(this.rootFile)
         }
         if (this.fileWatcher) {
@@ -649,7 +650,7 @@ export class Manager {
             return
         }
         this.extension.logger.addLogMessage('Creating file watcher for .bib files.')
-        this.bibWatcher = chokidar.watch([], this.watcherOptions)
+        this.bibWatcher = chokidarChild.watch([], this.watcherOptions)
         this.bibWatcher.on('change', (file: string) => this.onWatchedBibChanged(file))
         this.bibWatcher.on('unlink', (file: string) => this.onWatchedBibDeleted(file))
     }

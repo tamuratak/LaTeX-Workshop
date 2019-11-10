@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/mcollina/chokidar-children",
   "dependencies": {
-    "chokidar": "^1.0.0"
+
   },
   "devDependencies": {
     "pre-commit": "^1.0.6",

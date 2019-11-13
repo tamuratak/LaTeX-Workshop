@@ -49,7 +49,7 @@ export class MathPreview {
         return commandsString
     }
 
-    async findProjectNewCommand() {
+    async findProjectNewCommand(document: vscode.TextDocument) {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const newCommandFile = configuration.get('hover.preview.newcommand.newcommandFile') as string
         let commandsInConfigFile = ''
@@ -63,12 +63,16 @@ export class MathPreview {
         let commands: string[] = []
         let exceeded = false
         setTimeout( () => { exceeded = true }, 5000)
-        for (const tex of this.extension.manager.getIncludedTeX()) {
-            if (exceeded) {
-                throw new Error('Timeout Error in findProjectNewCommand')
+        if (configuration.get('hover.preview.newcommand.parseTeXFile.files') === 'all') {
+            for (const tex of this.extension.manager.getIncludedTeX()) {
+                if (exceeded) {
+                    throw new Error('Timeout Error in findProjectNewCommand')
+                }
+                const content = this.extension.manager.cachedContent[tex].content
+                commands = commands.concat(await this.findNewCommand(content))
             }
-            const content = this.extension.manager.cachedContent[tex].content
-            commands = commands.concat(await this.findNewCommand(content))
+        } else {
+            commands = await this.findNewCommand(document.getText())
         }
         return commandsInConfigFile + '\n' + commands.join('')
     }
@@ -134,7 +138,7 @@ export class MathPreview {
         if (configuration.get('hover.ref.enabled') as boolean) {
             const tex = this.findHoverOnRef(document, position, token, refData)
             if (tex) {
-                const newCommands = await this.findProjectNewCommand()
+                const newCommands = await this.findProjectNewCommand(document)
                 return this.provideHoverPreviewOnRef(tex, newCommands, refData)
             }
         }

@@ -1349,7 +1349,20 @@
         "latex-workshop.hover.preview.newcommand.parseTeXFile.enabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable newcommands defined in the current TeX file to be included in Hover Preview."
+          "markdownDescription": "Enable newcommands defined in TeX files to be included in Hover Preview."
+        },
+        "latex-workshop.hover.preview.newcommand.parseTeXFile.files": {
+          "type": "string",
+          "default": "current",
+          "enum": [
+            "all",
+            "current"
+          ],
+          "enumDescriptions": [
+            "All the TeX files in the current project.",
+            "The current TeX file."
+          ],
+          "markdownDescription": "Select TeX files in which newcommands will be included in Hover Preview."
         },
         "latex-workshop.hover.preview.newcommand.newcommandFile": {
           "type": "string",

@@ -10,7 +10,7 @@ import {TeXDoc} from './components/texdoc'
 import {performance} from 'perf_hooks'
 
 async function quickPickRootFile(rootFile: string, localRootFile: string): Promise<string | undefined> {
-    const pickedRootFile = await vscode.window.showQuickPick([{
+    const selected = await vscode.window.showQuickPick([{
         label: 'Default root file',
         description: `Path: ${rootFile}`
     }, {
@@ -19,22 +19,18 @@ async function quickPickRootFile(rootFile: string, localRootFile: string): Promi
     }], {
         placeHolder: 'Subfiles package detected. Which file to build?',
         matchOnDescription: true
-    }).then( selected => {
-        if (!selected) {
-            return undefined
-        }
-        switch (selected.label) {
-            case 'Default root file':
-                return rootFile
-                break
-            case 'Subfiles package root file':
-                return localRootFile
-                break
-            default:
-                return undefined
-        }
     })
-    return pickedRootFile
+    if (!selected) {
+        return undefined
+    }
+    switch (selected.label) {
+        case 'Default root file':
+            return rootFile
+        case 'Subfiles package root file':
+            return localRootFile
+        default:
+            return undefined
+    }
 }
 
 
@@ -166,27 +162,27 @@ export class Commander {
             this.extension.viewer.openExternal(pickedRootFile)
             return
         } else if (mode === 'set') {
-            this.setViewer()
+            await this.setViewer()
             return
         }
-        const promise = (configuration.get('view.pdf.viewer') as string === 'none') ? this.setViewer(): Promise.resolve()
-        promise.then(() => {
-            if (!pickedRootFile) {
-                return
-            }
-            switch (configuration.get('view.pdf.viewer')) {
-                case 'browser':
-                    this.extension.viewer.openBrowser(pickedRootFile)
-                    break
-                case 'tab':
-                default:
-                    this.extension.viewer.openTab(pickedRootFile, true, tabEditorGroup)
-                    break
-                case 'external':
-                    this.extension.viewer.openExternal(pickedRootFile)
-                    break
-            }
-        })
+        if (configuration.get('view.pdf.viewer') as string === 'none'){
+            await this.setViewer()
+        }
+        if (!pickedRootFile) {
+            return
+        }
+        switch (configuration.get('view.pdf.viewer')) {
+            case 'browser':
+                this.extension.viewer.openBrowser(pickedRootFile)
+                break
+            case 'tab':
+            default:
+                this.extension.viewer.openTab(pickedRootFile, true, tabEditorGroup)
+                break
+            case 'external':
+                this.extension.viewer.openExternal(pickedRootFile)
+                break
+        }
     }
 
     refresh() {
@@ -270,42 +266,37 @@ export class Commander {
         this.extension.logger.showLog()
     }
 
-    gotoSection(filePath: string, lineNumber: number) {
+    async gotoSection(filePath: string, lineNumber: number) {
         this.extension.logger.addLogMessage(`GOTOSECTION command invoked. Target ${filePath}, line ${lineNumber}`)
         const activeEditor = vscode.window.activeTextEditor
 
-        vscode.workspace.openTextDocument(filePath).then((doc) => {
-            vscode.window.showTextDocument(doc).then(() => {
-                vscode.commands.executeCommand('revealLine', {lineNumber, at: 'center'})
-                if (activeEditor) {
-                    activeEditor.selection = new vscode.Selection(new vscode.Position(lineNumber, 0), new vscode.Position(lineNumber, 0))
-                }
-            })
-        })
-
+        const doc = await vscode.workspace.openTextDocument(filePath)
+        await vscode.window.showTextDocument(doc)
+        await vscode.commands.executeCommand('revealLine', {lineNumber, at: 'center'})
+        if (activeEditor) {
+            activeEditor.selection = new vscode.Selection(new vscode.Position(lineNumber, 0), new vscode.Position(lineNumber, 0))
+        }
     }
 
-    setViewer() {
+    async setViewer() {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
-        return vscode.window.showQuickPick(['VSCode tab', 'Web browser', 'External viewer'], {placeHolder: 'View PDF with'})
-        .then(option => {
-            switch (option) {
-                case 'Web browser':
-                    configuration.update('view.pdf.viewer', 'browser', true)
-                    vscode.window.showInformationMessage('By default, PDF will be viewed with web browser. This setting can be changed at "latex-workshop.view.pdf.viewer".')
-                    break
-                case 'VSCode tab':
-                    configuration.update('view.pdf.viewer', 'tab', true)
-                    vscode.window.showInformationMessage('By default, PDF will be viewed with VSCode tab. This setting can be changed at "latex-workshop.view.pdf.viewer".')
-                    break
-                case 'External viewer':
-                    configuration.update('view.pdf.viewer', 'external', true)
-                    vscode.window.showInformationMessage('By default, PDF will be viewed with external viewer. This setting can be changed at "latex-workshop.view.pdf.viewer".')
-                    break
-                default:
-                    break
-            }
-        })
+        const option = await vscode.window.showQuickPick(['VSCode tab', 'Web browser', 'External viewer'], {placeHolder: 'View PDF with'})
+        switch (option) {
+            case 'Web browser':
+                configuration.update('view.pdf.viewer', 'browser', true)
+                vscode.window.showInformationMessage('By default, PDF will be viewed with web browser. This setting can be changed at "latex-workshop.view.pdf.viewer".')
+                break
+            case 'VSCode tab':
+                configuration.update('view.pdf.viewer', 'tab', true)
+                vscode.window.showInformationMessage('By default, PDF will be viewed with VSCode tab. This setting can be changed at "latex-workshop.view.pdf.viewer".')
+                break
+            case 'External viewer':
+                configuration.update('view.pdf.viewer', 'external', true)
+                vscode.window.showInformationMessage('By default, PDF will be viewed with external viewer. This setting can be changed at "latex-workshop.view.pdf.viewer".')
+                break
+            default:
+                break
+        }
     }
 
     navigateToEnvPair() {
@@ -373,7 +364,7 @@ export class Commander {
      * Note that hitting enter on a line containing only \item or \item[]
      * actually deletes the content of the line.
      */
-    onEnterKey(modifiers?: string) {
+    async onEnterKey(modifiers?: string) {
         const editor = vscode.window.activeTextEditor
         if (!editor) {
             return
@@ -423,12 +414,9 @@ export class Commander {
                 itemString += '\\item '
                 newCursorPos = cursorPos.with(line.lineNumber + 1, itemString.length)
             }
-            return editor.edit(editBuilder => {
-                editBuilder.insert(cursorPos, '\n' + itemString)
-                }).then(() => {
-                    editor.selection = new vscode.Selection(newCursorPos, newCursorPos)
-                }
-            ).then(() => { editor.revealRange(editor.selection) })
+            await editor.edit(editBuilder => { editBuilder.insert(cursorPos, '\n' + itemString) })
+            editor.selection = new vscode.Selection(newCursorPos, newCursorPos)
+            editor.revealRange(editor.selection)
         }
         return editor.edit(() => {
             vscode.commands.executeCommand('type', { source: 'keyboard', text: '\n' })

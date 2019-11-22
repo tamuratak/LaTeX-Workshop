@@ -417,10 +417,12 @@ export class Commander {
             await editor.edit(editBuilder => { editBuilder.insert(cursorPos, '\n' + itemString) })
             editor.selection = new vscode.Selection(newCursorPos, newCursorPos)
             editor.revealRange(editor.selection)
+            return
+        } else {
+            return editor.edit(() => {
+                vscode.commands.executeCommand('type', { source: 'keyboard', text: '\n' })
+            })
         }
-        return editor.edit(() => {
-            vscode.commands.executeCommand('type', { source: 'keyboard', text: '\n' })
-        })
     }
 
     /**

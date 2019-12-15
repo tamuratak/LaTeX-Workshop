@@ -26,23 +26,33 @@ class Client {
 
 export class Viewer {
     extension: Extension
-    clients: {[key: string]: Client[]} = {}
+    clients: Map<string, Map<ws, Client>> = new Map()
 
     constructor(extension: Extension) {
         this.extension = extension
     }
 
+    getClients(pdfFilePath: string): Map<ws, Client> | undefined {
+        return this.clients.get(pdfFilePath.toLocaleUpperCase())
+    }
+
+    createClinets(pdfFilePath: string) {
+        if(!this.getClients(pdfFilePath)) {
+            this.clients.set(pdfFilePath.toLocaleUpperCase(), new Map())
+        }
+    }
+
     refreshExistingViewer(sourceFile?: string, viewer?: string): boolean {
         if (!sourceFile) {
             Object.keys(this.clients).forEach(key => {
-                this.clients[key].forEach(client => {
+                this.clients.get(key)?.forEach(client => {
                     client.send({type: 'refresh'})
                 })
             })
             return true
         }
         const pdfFile = this.extension.manager.tex2pdf(sourceFile, true)
-        const clients = this.clients[pdfFile.toLocaleUpperCase()]
+        const clients = this.getClients(pdfFile)
         if (clients !== undefined) {
             let refreshed = false
             // Check all viewer clients with the same path
@@ -85,7 +95,7 @@ export class Viewer {
             return
         }
         const pdfFile = this.extension.manager.tex2pdf(sourceFile)
-        this.clients[pdfFile.toLocaleUpperCase()] = this.clients[pdfFile.toLocaleUpperCase()] || []
+        this.createClinets(pdfFile)
 
         try {
             vscode.env.openExternal(vscode.Uri.parse(url))
@@ -109,7 +119,7 @@ export class Viewer {
             return
         }
         const pdfFile = this.extension.manager.tex2pdf(sourceFile, respectOutDir)
-        this.clients[pdfFile.toLocaleUpperCase()] = this.clients[pdfFile.toLocaleUpperCase()] || []
+        this.createClinets(pdfFile)
 
         const editor = vscode.window.activeTextEditor
         let viewColumn: vscode.ViewColumn
@@ -191,38 +201,31 @@ export class Viewer {
 
     handler(websocket: ws, msg: string) {
         const data: ClientRequest = JSON.parse(msg)
-        let clients: Client[] | undefined
+        let clients: Map<ws, Client> | undefined
         if (data.type !== 'ping') {
             this.extension.logger.addLogMessage(`Handle data type: ${data.type}`)
         }
         switch (data.type) {
             case 'open': {
-                clients = this.clients[data.path.toLocaleUpperCase()]
+                clients = this.getClients(data.path)
                 if (clients === undefined) {
                     return
                 }
-                clients.push( new Client(data.viewer, websocket) )
+                clients.set(websocket, new Client(data.viewer, websocket) )
                 break
             }
             case 'close': {
-                for (const key in this.clients) {
-                    clients = this.clients[key]
-                    let index = -1
-                    for (const client of clients) {
-                        if (client.websocket === websocket) {
-                            index = clients.indexOf(client)
-                            break
-                        }
-                    }
-                    if (index > -1) {
-                        clients.splice(index, 1)
-                    }
+                for (const clientsMap of this.clients.values()) {
+                    clientsMap.delete(websocket)
                 }
                 break
             }
             case 'loaded': {
-                clients = this.clients[data.path.toLocaleUpperCase()]
-                for (const client of clients) {
+                clients = this.getClients(data.path)
+                if (!clients) {
+                    return
+                }
+                for (const client of clients.values()) {
                     if (client.websocket !== websocket) {
                         continue
                     }
@@ -267,12 +270,12 @@ export class Viewer {
     }
 
     syncTeX(pdfFile: string, record: SyncTeXRecordForward) {
-        const clients = this.clients[pdfFile.toLocaleUpperCase()]
+        const clients = this.getClients(pdfFile)
         if (clients === undefined) {
             this.extension.logger.addLogMessage(`PDF is not viewed: ${pdfFile}`)
             return
         }
-        for (const client of clients) {
+        for (const client of clients.values()) {
             client.send({type: 'synctex', data: record})
             this.extension.logger.addLogMessage(`Try to synctex ${pdfFile}`)
         }

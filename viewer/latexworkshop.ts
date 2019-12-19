@@ -63,6 +63,12 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
             })
         }, {once: true})
 
+        const evNames: string[] = ['DOMContentLoaded', 'baseviewerinit', 'pagechanging', 'rotationchanging', 'pagesloaded', 'pagesinit', 'updateviewarea', 'documentloaded', 'documentinit', 'pagerendered', 'textlayerrendered', 'webviewerloaded']
+        for(const name of evNames) {
+            document.addEventListener(name, () => {
+                console.log(name)
+            })
+        }
         this.hidePrintButton()
         this.registerKeybinding()
         this.startConnectionKeeper()

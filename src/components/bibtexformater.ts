@@ -21,7 +21,17 @@ export class BibtexFormater {
         }
         const t0 = performance.now() // Measure performance
         this.duplicatesDiagnostics.clear()
-        const ast = await this.extension.pegParser.parseBibtex(vscode.window.activeTextEditor.document.getText())
+        const document = vscode.window.activeTextEditor.document
+        const ast = await this.extension.pegParser.parseBibtex(document.getText()).catch((e) => {
+            const file = document.uri.fsPath
+            if (bibtexParser.isSyntaxError(e)) {
+                const line = e.location.start.line
+                this.extension.logger.addLogMessage(`Error parsing BibTeX: line ${line} in ${file}.`)
+            } else if ('TimeoutError' === e.name) {
+                this.extension.logger.addLogMessage(`TimeoutError while parsing ${file}.`)
+            }
+            throw e
+        })
 
         // Get configuration
         const config = vscode.workspace.getConfiguration('latex-workshop')

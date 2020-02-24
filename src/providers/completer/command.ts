@@ -217,35 +217,23 @@ export class Command {
 
     updatePkg(file: string, nodes?: latexParser.Node[], content?: string) {
         if (nodes !== undefined) {
-            nodes.forEach(node => {
-                if (latexParser.isCommand(node) && node.name === 'usepackage') {
-                    node.args.forEach(arg => {
-                        if (latexParser.isOptionalArg(arg)) {
-                            return
-                        }
-                        for (const c of arg.content) {
-                            if (!latexParser.isTextString(c)) {
-                                continue
-                            }
-                            c.content.split(',').forEach(pkg => {
-                                pkg = pkg.trim()
-                                if (pkg === '') {
-                                    return
-                                }
-                                const pkgs = this.extension.manager.cachedContent[file].element.package
-                                if (pkgs) {
-                                    pkgs.push(pkg)
-                                } else {
-                                    this.extension.manager.cachedContent[file].element.package = [pkg]
-                                }
-                            })
-                        }
-                    })
-                } else {
-                    if (latexParser.hasContentArray(node)) {
-                        this.updatePkg(file, node.content)
+            const pat = latexParser
+            .pattern( (node) => latexParser.isCommand(node) && node.name === 'usepackage')
+            .child(latexParser.isGroup)
+            .child(latexParser.isTextString)
+            pat.match(nodes, { traverseAll: true }).forEach( result => {
+                result.node.content.split(',').forEach( pkg => {
+                    pkg = pkg.trim()
+                    if (pkg === '') {
+                        return
                     }
-                }
+                    const pkgs = this.extension.manager.cachedContent[file].element.package
+                    if (pkgs) {
+                        pkgs.push(pkg)
+                    } else {
+                        this.extension.manager.cachedContent[file].element.package = [pkg]
+                    }
+                })
             })
         } else if (content !== undefined) {
             const pkgReg = /\\usepackage(?:\[[^[\]{}]*\])?{(.*)}/g
@@ -306,17 +294,20 @@ export class Command {
                 cmds.push(cmd)
                 cmdList.push(node.name)
             }
-            if (['newcommand', 'renewcommand', 'providecommand', 'DeclarePairedDelimiter', 'DeclarePairedDelimiterX', 'DeclarePairedDelimiterXPP'].includes(node.name) &&
-                Array.isArray(node.args) && node.args.length > 0) {
-                const label = (node.args[0].content[0] as latexParser.Command).name
+            if (['newcommand', 'renewcommand', 'providecommand', 'DeclarePairedDelimiter', 'DeclarePairedDelimiterX', 'DeclarePairedDelimiterXPP'].includes(node.name) && node.args.length > 0) {
+                const [firstArg, secondArg] = [node.args[0], node.args[1]]
+                const numArgsTexTString = secondArg.content[0]
+                const label = latexParser.isCommand(firstArg) ? firstArg.name : undefined
                 let args = ''
-                if (latexParser.isOptionalArg(node.args[1])) {
-                    const numArgs = parseInt((node.args[1].content[0] as latexParser.TextString).content)
-                    for (let i = 1; i <= numArgs; ++i) {
-                        args += '{${' + i + '}}'
+                if (latexParser.isOptionalArg(secondArg) && latexParser.isTextString(numArgsTexTString)) {
+                    if (/^[0-9]+$/.exec(numArgsTexTString.content)) {
+                        const numArgs = parseInt(numArgsTexTString.content)
+                        for (let i = 1; i <= numArgs; ++i) {
+                            args += '{${' + i + '}}'
+                        }
                     }
                 }
-                if (!cmdList.includes(label)) {
+                if (label && !cmdList.includes(label)) {
                     const cmd: Suggestion = {
                         label: `\\${label}`,
                         kind: vscode.CompletionItemKind.Function,

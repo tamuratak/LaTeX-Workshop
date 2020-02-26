@@ -21,6 +21,10 @@ export class Package {
         })
     }
 
+    provideFrom() {
+        return this.provide()
+    }
+
     provide(): vscode.CompletionItem[] {
         if (this.suggestions.length === 0) {
             const pkgs = JSON.parse(fs.readFileSync(`${this.extension.extensionRoot}/data/packagenames.json`).toString())

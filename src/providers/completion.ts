@@ -124,7 +124,6 @@ export class Completer implements vscode.CompletionItemProvider {
     completion(type: string, line: string, args: {document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext}): vscode.CompletionItem[] {
         let reg: RegExp | undefined
         let provider: Citation | Reference | Environment | Command | Package | Input | undefined
-        let payload: any
         switch (type) {
             case 'citation':
                 reg = /(?:\\[a-zA-Z]*[Cc]ite[a-zA-Z]*\*?(?:(?:\[[^[\]]*\])*(?:{[^{}]*})?)*{([^}]*)$)|(?:\\bibentry{([^}]*)$)/
@@ -166,16 +165,7 @@ export class Completer implements vscode.CompletionItemProvider {
         const result = line.match(reg)
         let suggestions: vscode.CompletionItem[] = []
         if (result) {
-            if (type === 'input' || type === 'import' || type === 'subimport') {
-                const editor = vscode.window.activeTextEditor
-                // Make sure to pass the args always in the same order [type, filename, command, typedFolder, importFromDir]
-                if (editor) {
-                    payload = [type, editor.document.fileName, result[1], ...result.slice(2).reverse()]
-                }
-            } else if (type === 'reference' || type === 'citation') {
-                payload = args
-            }
-            suggestions = provider.provide(payload)
+            suggestions = provider.provideFrom(type, result, args)
         }
         return suggestions
     }

@@ -58,6 +58,17 @@ export class Input {
         this.graphicsPath = []
     }
 
+
+    provideFrom(type: string, result: RegExpMatchArray) {
+        const editor = vscode.window.activeTextEditor
+        let payload: string[] = []
+        // Make sure to pass the args always in the same order [type, filename, command, typedFolder, importFromDir]
+        if (editor) {
+            payload = [type, editor.document.fileName, result[1], ...result.slice(2).reverse()]
+        }
+        return this.provide(payload)
+    }
+
     /**
      * Provide file name intellissense
      *

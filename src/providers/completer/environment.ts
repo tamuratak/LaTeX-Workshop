@@ -17,6 +17,10 @@ export class Environment {
         this.defaultEnvs = envs.map(env => new vscode.CompletionItem(env, vscode.CompletionItemKind.Module))
     }
 
+    provideFrom() {
+        return this.provide()
+    }
+
     provide(): vscode.CompletionItem[] {
         // Extract cached envs and add to default ones
         const suggestions: vscode.CompletionItem[] = Array.from(this.defaultEnvs)

@@ -74,6 +74,10 @@ export class Command {
         })
     }
 
+    provideFrom() {
+        return this.provide()
+    }
+
     provide(): vscode.CompletionItem[] {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const useOptionalArgsEntries = configuration.get('intellisense.optionalArgsEntries.enabled')

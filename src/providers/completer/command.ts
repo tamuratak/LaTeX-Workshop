@@ -308,7 +308,8 @@ export class Command {
             }
             if (['newcommand', 'renewcommand', 'providecommand', 'DeclarePairedDelimiter', 'DeclarePairedDelimiterX', 'DeclarePairedDelimiterXPP'].includes(node.name) && node.args.length > 0) {
                 const [firstArg, secondArg] = [node.args[0], node.args[1]]
-                const label = latexParser.isCommand(firstArg) ? firstArg.name : undefined
+                const firstArgContent = firstArg.content[0]
+                const label = latexParser.isCommand(firstArgContent) ? firstArgContent.name : undefined
                 let args = ''
                 if (latexParser.isOptionalArg(secondArg)) {
                     const numArgsTextString = secondArg.content[0]

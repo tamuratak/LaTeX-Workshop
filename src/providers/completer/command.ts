@@ -308,11 +308,11 @@ export class Command {
             }
             if (['newcommand', 'renewcommand', 'providecommand', 'DeclarePairedDelimiter', 'DeclarePairedDelimiterX', 'DeclarePairedDelimiterXPP'].includes(node.name) && node.args.length > 0) {
                 const [firstArg, secondArg] = [node.args[0], node.args[1]]
-                const numArgsTextString = secondArg.content[0]
                 const label = latexParser.isCommand(firstArg) ? firstArg.name : undefined
                 let args = ''
-                if (latexParser.isOptionalArg(secondArg) && latexParser.isTextString(numArgsTextString)) {
-                    if (/^[0-9]+$/.exec(numArgsTextString.content)) {
+                if (latexParser.isOptionalArg(secondArg)) {
+                    const numArgsTextString = secondArg.content[0]
+                    if (latexParser.isTextString(numArgsTextString) && /^[0-9]+$/.exec(numArgsTextString.content)) {
                         const numArgs = parseInt(numArgsTextString.content)
                         for (let i = 1; i <= numArgs; ++i) {
                             args += '{${' + i + '}}'

@@ -221,7 +221,7 @@ export class Command {
             .pattern( (node) => latexParser.isCommand(node) && node.name === 'usepackage')
             .child(latexParser.isGroup)
             .child(latexParser.isTextString)
-            pat.match(nodes, { traverseAll: true }).forEach( result => {
+            pat.matchAll(nodes, { traverseAll: true }).forEach( result => {
                 result.node.content.split(',').forEach( pkg => {
                     pkg = pkg.trim()
                     if (pkg === '') {
@@ -296,15 +296,17 @@ export class Command {
             }
             if (['newcommand', 'renewcommand', 'providecommand', 'DeclarePairedDelimiter', 'DeclarePairedDelimiterX', 'DeclarePairedDelimiterXPP'].includes(node.name) && node.args.length > 0) {
                 const [firstArg, secondArg] = [node.args[0], node.args[1]]
-                const numArgsTexTString = secondArg.content[0]
-                const label = latexParser.isCommand(firstArg) ? firstArg.name : undefined
+                const label = latexParser.pattern(latexParser.isGroup)
+                                         .child(latexParser.isCommand)
+                                         .match([firstArg])?.node.name
+                const numArgsTexTString = latexParser.pattern(latexParser.isOptionalArg)
+                                                     .child(latexParser.isTextString)
+                                                     .match([secondArg])?.node.content
                 let args = ''
-                if (latexParser.isOptionalArg(secondArg) && latexParser.isTextString(numArgsTexTString)) {
-                    if (/^[0-9]+$/.exec(numArgsTexTString.content)) {
-                        const numArgs = parseInt(numArgsTexTString.content)
-                        for (let i = 1; i <= numArgs; ++i) {
-                            args += '{${' + i + '}}'
-                        }
+                if (numArgsTexTString && /^[0-9]+$/.exec(numArgsTexTString)) {
+                    const numArgs = parseInt(numArgsTexTString)
+                    for (let i = 1; i <= numArgs; ++i) {
+                        args += '{${' + i + '}}'
                     }
                 }
                 if (label && !cmdList.includes(label)) {

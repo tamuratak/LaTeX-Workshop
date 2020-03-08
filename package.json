@@ -1667,7 +1667,7 @@
     "release": "npm run clean && npm run lint && npm run compile && vsce package",
     "test": "node ./out/test/runTest.js",
     "test:docker": "node ./out/test/runTest.js --enable-docker",
-    "test:parallel": "run-p test:parallel:*",
+    "test:parallel": "npm run test 001 && run-p test:parallel:*",
     "test:parallel:a": "node ./out/test/runTest.js fixture00 fixture01",
     "test:parallel:b": "node ./out/test/runTest.js fixture02 fixture03",
     "test:parallel:c": "node ./out/test/runTest.js fixture04 fixture05",

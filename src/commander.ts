@@ -80,7 +80,7 @@ export class Commander {
         if (externalBuildCommand) {
             const pwd = path.dirname(rootFile ? rootFile : vscode.window.activeTextEditor.document.fileName)
             await this.extension.builder.buildWithExternalCommand(externalBuildCommand, externalBuildArgs, pwd, rootFile)
-            return
+            return rootFile
         }
         if (rootFile === undefined) {
             this.extension.logger.addLogMessage('Cannot find LaTeX root file.')
@@ -96,6 +96,7 @@ export class Commander {
         }
         this.extension.logger.addLogMessage(`Building root file: ${pickedRootFile}`)
         await this.extension.builder.build(pickedRootFile, recipe)
+        return pickedRootFile
     }
 
     async revealOutputDir() {
@@ -164,35 +165,36 @@ export class Commander {
         const tabEditorGroup = configuration.get('view.pdf.tab.editorGroup') as string
         if (mode === 'browser') {
             this.extension.viewer.openBrowser(pickedRootFile)
-            return
+            return pickedRootFile
         } else if (mode === 'tab') {
             this.extension.viewer.openTab(pickedRootFile, true, tabEditorGroup)
-            return
+            return pickedRootFile
         } else if (mode === 'external') {
             this.extension.viewer.openExternal(pickedRootFile)
-            return
+            return pickedRootFile
         } else if (mode === 'set') {
             this.setViewer()
             return
         }
-        const promise = (configuration.get('view.pdf.viewer') as string === 'none') ? this.setViewer(): Promise.resolve()
-        promise.then(() => {
-            if (!pickedRootFile) {
-                return
-            }
-            switch (configuration.get('view.pdf.viewer')) {
-                case 'browser':
-                    this.extension.viewer.openBrowser(pickedRootFile)
-                    break
-                case 'tab':
-                default:
-                    this.extension.viewer.openTab(pickedRootFile, true, tabEditorGroup)
-                    break
-                case 'external':
-                    this.extension.viewer.openExternal(pickedRootFile)
-                    break
-            }
-        })
+        if (configuration.get('view.pdf.viewer') as string === 'none'){
+            await this.setViewer()
+        }
+        if (!pickedRootFile) {
+            return
+        }
+        switch (configuration.get('view.pdf.viewer')) {
+            case 'browser':
+                this.extension.viewer.openBrowser(pickedRootFile)
+                break
+            case 'tab':
+            default:
+                this.extension.viewer.openTab(pickedRootFile, true, tabEditorGroup)
+                break
+            case 'external':
+                this.extension.viewer.openExternal(pickedRootFile)
+                break
+        }
+        return pickedRootFile
     }
 
     refresh() {

@@ -32,7 +32,7 @@ export type ViewerStatus = {
 
 export class Viewer {
     extension: Extension
-    clients: {[key: string]: Client[]} = {}
+    clients: {[key: string]: Set<Client>} = {}
     webviewPanels: Map<string, Set<vscode.WebviewPanel>> = new Map()
     statusMessageQueue: Map<string, ViewerStatus[]> = new Map()
 
@@ -42,13 +42,13 @@ export class Viewer {
 
     createClients(pdfFilePath: string) {
         const key = pdfFilePath.toLocaleUpperCase()
-        this.clients[key] = this.clients[key] || []
+        this.clients[key] = this.clients[key] || new Set()
         if (!this.webviewPanels.has(key)) {
             this.webviewPanels.set(key, new Set())
         }
     }
 
-    getClients(pdfFilePath: string): Client[] | undefined {
+    getClients(pdfFilePath: string): Set<Client> | undefined {
         return this.clients[pdfFilePath.toLocaleUpperCase()]
     }
 
@@ -235,7 +235,7 @@ export class Viewer {
 
     handler(websocket: ws, msg: string) {
         const data: ClientRequest = JSON.parse(msg)
-        let clients: Client[] | undefined
+        let clients: Set<Client> | undefined
         if (data.type !== 'ping') {
             this.extension.logger.addLogMessage(`Handle data type: ${data.type}`)
         }
@@ -245,23 +245,14 @@ export class Viewer {
                 if (clients === undefined) {
                     return
                 }
-                clients.push( new Client(data.viewer, websocket) )
+                const client = new Client(data.viewer, websocket)
+                clients.add( client )
+                websocket.on('close', () => {
+                    this.getClients(data.path)?.delete(client)
+                })
                 break
             }
             case 'close': {
-                for (const key in this.clients) {
-                    clients = this.clients[key]
-                    let index = -1
-                    for (const client of clients) {
-                        if (client.websocket === websocket) {
-                            index = clients.indexOf(client)
-                            break
-                        }
-                    }
-                    if (index > -1) {
-                        clients.splice(index, 1)
-                    }
-                }
                 break
             }
             case 'request_params': {
@@ -365,7 +356,7 @@ export class Viewer {
 
     async getViewerStatus(pdfFilePath: string): Promise<ViewerStatus[]> {
         const clients = this.getClients(pdfFilePath)
-        if (clients === undefined || clients.length === 0) {
+        if (clients === undefined || clients.size === 0) {
             return []
         }
         this.statusMessageQueue.set(pdfFilePath, [])

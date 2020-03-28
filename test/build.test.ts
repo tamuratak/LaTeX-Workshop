@@ -1,5 +1,6 @@
 import * as assert from 'assert'
 import * as fs from 'fs'
+import * as os from 'os'
 import * as path from 'path'
 import * as process from 'process'
 import * as vscode from 'vscode'
@@ -551,5 +552,21 @@ suite('Buid TeX files test suite', () => {
             )
         })
     }, () => isDockerEnabled())
+
+    //
+    // Recipe tests
+    //
+    runTestWithFixture('fixture100', 'copy t.pdf to b.pdf with cmd.exe on Windows', async () => {
+        const fixtureDir = getFixtureDir()
+        const texFileName = 't.tex'
+        const pdfFileName = 'b.pdf'
+        const pdfFilePath = path.join(fixtureDir, pdfFileName)
+        await assertPdfIsGenerated(pdfFilePath, async () => {
+            const texFilePath = vscode.Uri.file(path.join(fixtureDir, texFileName))
+            const doc = await vscode.workspace.openTextDocument(texFilePath)
+            await vscode.window.showTextDocument(doc)
+            await executeVscodeCommandAfterActivation('latex-workshop.build')
+        })
+    }, () => os.platform() !== 'win32')
 
 })

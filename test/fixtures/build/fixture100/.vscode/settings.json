@@ -22,7 +22,7 @@
         {
           "name": "copyPDF",
           "command": "cmd.exe",
-          "args": ["/C", "copy", "%OUTDIR%/%DOCFILE%.pdf",  "%OUTDIR%/b.pdf"],
+          "args": ["/C", "copy", "\"%OUTDIR%/%DOCFILE%.pdf\"",  "\"%OUTDIR%/b.pdf\""],
           "env": {}
         }
     ]

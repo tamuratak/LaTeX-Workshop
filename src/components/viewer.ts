@@ -235,20 +235,19 @@ export class Viewer {
 
     handler(websocket: ws, msg: string) {
         const data: ClientRequest = JSON.parse(msg)
-        let clients: Set<Client> | undefined
         if (data.type !== 'ping') {
             this.extension.logger.addLogMessage(`Handle data type: ${data.type}`)
         }
         switch (data.type) {
             case 'open': {
-                clients = this.getClients(data.path)
+                const clients = this.getClients(data.path)
                 if (clients === undefined) {
                     return
                 }
                 const client = new Client(data.viewer, websocket)
                 clients.add( client )
                 websocket.on('close', () => {
-                    this.getClients(data.path)?.delete(client)
+                    clients.delete(client)
                 })
                 break
             }
@@ -256,7 +255,7 @@ export class Viewer {
                 break
             }
             case 'request_params': {
-                clients = this.getClients(data.path)
+                const clients = this.getClients(data.path)
                 if (!clients) {
                     break
                 }

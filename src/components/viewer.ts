@@ -30,10 +30,19 @@ export type ViewerStatus = {
     scrollTop: number
 }
 
+class PdfViewerPanel {
+    readonly webviewPanel: vscode.WebviewPanel
+
+    constructor(panel: vscode.WebviewPanel) {
+        this.webviewPanel = panel
+    }
+
+}
+
 export class Viewer {
     extension: Extension
     clients: {[key: string]: Set<Client>} = {}
-    webviewPanels: Map<string, Set<vscode.WebviewPanel>> = new Map()
+    webviewPanels: Map<string, Set<PdfViewerPanel>> = new Map()
     statusMessageQueue: Map<string, ViewerStatus[]> = new Map()
 
     constructor(extension: Extension) {
@@ -161,9 +170,10 @@ export class Viewer {
         }
         const panelSet = this.getPanelSet(pdfFile)
         if (panelSet) {
-            panelSet.add(panel)
+            const pdfPanel = new PdfViewerPanel(panel)
+            panelSet.add(pdfPanel)
             panel.onDidDispose(() => {
-                panelSet.delete(panel)
+                panelSet.delete(pdfPanel)
             })
         }
         this.extension.logger.addLogMessage(`Open PDF tab for ${pdfFile}`)
@@ -342,9 +352,9 @@ export class Viewer {
         }
         const activeViewColumn = vscode.window.activeTextEditor?.viewColumn
         for (const panel of panelSet.values()) {
-            if (panel.viewColumn !== activeViewColumn) {
-                if (!panel.visible) {
-                    panel.reveal(undefined, true)
+            if (panel.webviewPanel.viewColumn !== activeViewColumn) {
+                if (!panel.webviewPanel.visible) {
+                    panel.webviewPanel.reveal(undefined, true)
                     return true
                 }
                 return

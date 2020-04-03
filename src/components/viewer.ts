@@ -137,13 +137,7 @@ export class Viewer {
         if (!url) {
             return
         }
-        if (this.extension.server.port === undefined) {
-            this.extension.logger.addLogMessage('Server port is undefined')
-            return
-        }
         const pdfFile = this.extension.manager.tex2pdf(sourceFile, respectOutDir)
-        this.createClients(pdfFile)
-
         const editor = vscode.window.activeTextEditor
         let viewColumn: vscode.ViewColumn
         if (tabEditorGroup === 'current') {
@@ -156,27 +150,43 @@ export class Viewer {
                 viewColumn = vscode.ViewColumn.Beside
             }
         }
-        const panel = vscode.window.createWebviewPanel('latex-workshop-pdf', path.basename(pdfFile), viewColumn, {
+        const panel = this.createPdfViewerPanel(pdfFile, viewColumn)
+        if (!panel) {
+            return
+        }
+        if (editor && viewColumn !== vscode.ViewColumn.Active) {
+            setTimeout(async () => {
+                await vscode.window.showTextDocument(editor.document, editor.viewColumn)
+                if (tabEditorGroup === 'left' && viewColumn !== vscode.ViewColumn.One) {
+                    await vscode.commands.executeCommand('workbench.action.moveActiveEditorGroupRight')
+                }
+            }, 500)
+        }
+        this.extension.logger.addLogMessage(`Open PDF tab for ${pdfFile}`)
+    }
+
+    createPdfViewerPanel(pdfFilePath: string, viewColumn: vscode.ViewColumn): PdfViewerPanel | undefined {
+        if (this.extension.server.port === undefined) {
+            this.extension.logger.addLogMessage('Server port is undefined')
+            return
+        }
+        this.createClients(pdfFilePath)
+        const panelSet = this.getPanelSet(pdfFilePath)
+        if (!panelSet) {
+            return
+        }
+        const panel = vscode.window.createWebviewPanel('latex-workshop-pdf', path.basename(pdfFilePath), viewColumn, {
             enableScripts: true,
             retainContextWhenHidden: true,
             portMapping : [{webviewPort: this.extension.server.port, extensionHostPort: this.extension.server.port}]
         })
-        panel.webview.html = this.getPDFViewerContent(pdfFile)
-        if (editor && viewColumn !== vscode.ViewColumn.Active) {
-            setTimeout(() => { vscode.window.showTextDocument(editor.document, editor.viewColumn).then(() => {
-                if (tabEditorGroup === 'left' && viewColumn !== vscode.ViewColumn.One) {
-                vscode.commands.executeCommand('workbench.action.moveActiveEditorGroupRight')
-            }}) }, 500)
-        }
-        const panelSet = this.getPanelSet(pdfFile)
-        if (panelSet) {
-            const pdfPanel = new PdfViewerPanel(panel)
-            panelSet.add(pdfPanel)
-            panel.onDidDispose(() => {
-                panelSet.delete(pdfPanel)
-            })
-        }
-        this.extension.logger.addLogMessage(`Open PDF tab for ${pdfFile}`)
+        panel.webview.html = this.getPDFViewerContent(pdfFilePath)
+        const pdfPanel = new PdfViewerPanel(panel)
+        panelSet.add(pdfPanel)
+        panel.onDidDispose(() => {
+            panelSet.delete(pdfPanel)
+        })
+        return pdfPanel
     }
 
     getPDFViewerContent(pdfFile: string): string {

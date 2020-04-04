@@ -341,7 +341,10 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
             if (utils.isPdfjsShortcut(obj)) {
                 return
             }
-            window.parent.postMessage(obj, '*')
+            window.parent.postMessage({
+                type: 'keyboard_event',
+                event: obj
+            }, '*')
         })
     }
 }

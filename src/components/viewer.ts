@@ -39,14 +39,31 @@ class PdfViewerPanel {
 
 }
 
+class PdfViewerPanelSerializer implements vscode.WebviewPanelSerializer {
+    extension: Extension
+
+    constructor(extension: Extension) {
+        this.extension = extension
+    }
+
+    deserializeWebviewPanel(panel: vscode.WebviewPanel, state: {path: string}) {
+        const pdfFilePath = state.path
+        panel.webview.html = this.extension.viewer.getPDFViewerContent(pdfFilePath)
+        return Promise.resolve()
+    }
+
+}
+
 export class Viewer {
     extension: Extension
     clients: {[key: string]: Set<Client>} = {}
     webviewPanels: Map<string, Set<PdfViewerPanel>> = new Map()
     statusMessageQueue: Map<string, ViewerStatus[]> = new Map()
+    pdfViewerPanelSerializer: PdfViewerPanelSerializer
 
     constructor(extension: Extension) {
         this.extension = extension
+        this.pdfViewerPanelSerializer = new PdfViewerPanelSerializer(extension)
     }
 
     createClients(pdfFilePath: string) {
@@ -202,13 +219,15 @@ export class Viewer {
             //
             // Note: this works on first load, or when navigating between groups, but not when
             //       navigating between tabs of the same group for some reason!
-
             let iframe = document.getElementById('preview-panel');
             window.onfocus = iframe.onload = function() {
                 setTimeout(function() { // doesn't work immediately
                     iframe.contentWindow.focus();
                 }, 100);
             }
+
+            const vsStore = acquireVsCodeApi();
+            vsStore.setState({path: '${pdfFile}'});
             // To enable keyboard shortcuts of VS Code when the iframe is focused,
             // we have to dispatch keyboard events in the parent window.
             // See https://github.com/microsoft/vscode/issues/65452#issuecomment-586036474

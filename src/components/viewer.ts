@@ -236,7 +236,7 @@ export class Viewer {
             }
 
             const vsStore = acquireVsCodeApi();
-            vsStore.setState({path: '${pdfFile}'});
+            // vsStore.setState({path: '${pdfFile}'});
             // To enable keyboard shortcuts of VS Code when the iframe is focused,
             // we have to dispatch keyboard events in the parent window.
             // See https://github.com/microsoft/vscode/issues/65452#issuecomment-586036474
@@ -247,7 +247,8 @@ export class Viewer {
                 switch (e.data.type) {
                     case 'initialized': {
                         const status = vsStore.getState();
-                        iframe.contentWindow.postMessage(status);
+                        status.type = 'restore_status';
+                        iframe.contentWindow.postMessage(status, '*');
                         break;
                     }
                     case 'keyboard_event': {
@@ -255,7 +256,7 @@ export class Viewer {
                         break;
                     }
                     case 'status': {
-                        vsStore.setState(e.data.status);
+                        vsStore.setState(e.data);
                         break;
                     }
                     default:

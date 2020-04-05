@@ -1,7 +1,7 @@
 import {IDisposable, ILatexWorkshopPdfViewer, IPDFViewerApplication, IPDFViewerApplicationOptions} from './components/interface.js'
 import {SyncTex} from './components/synctex.js'
 import {PageTrimmer} from './components/pagetrimmer.js'
-import {ClientRequest, ServerResponse, PanelRequest} from './components/protocol.js'
+import {ClientRequest, ServerResponse, PanelManagerResponse, PanelRequest} from './components/protocol.js'
 import * as utils from './components/utils.js'
 import {ViewerHistory} from './components/viewerhistory.js'
 
@@ -20,6 +20,9 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
     readonly viewerHistory: ViewerHistory
 
     private socket: WebSocket
+    private pdfViewerStarted: Promise<void> = new Promise((resolve) => {
+        document.addEventListener('documentloaded', () => resolve(), {once: true})
+    })
 
     constructor() {
         this.embedded = window.parent !== window
@@ -62,6 +65,8 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
         this.registerKeybinding()
         this.startConnectionKeeper()
         this.startRebroadcastingKeyboardEvent()
+        this.startSendingStatus()
+        this.startRecievingPanelManagerResponse()
     }
 
     onWillStartPdfViewer(cb: (e: Event) => any): IDisposable {
@@ -354,6 +359,45 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
             })
         })
     }
+
+    startSendingStatus() {
+        if (!this.embedded) {
+            return
+        }
+        window.addEventListener('scroll', () => {
+            const pack = {
+                path: this.pdfFilePath,
+                scale: PDFViewerApplication.pdfViewer.currentScaleValue,
+//                scrollMode: PDFViewerApplication.pdfViewer.scrollMode,
+//                spreadMode: PDFViewerApplication.pdfViewer.spreadMode,
+                scrollTop: document.getElementById('viewerContainer').scrollTop,
+//                scrollLeft: document.getElementById('viewerContainer').scrollLeft,
+                trim: (document.getElementById('trimSelect') as HTMLSelectElement).selectedIndex
+            }
+            this.sendToPanelManager({type: 'status', ...pack})
+        }, true)
+    }
+
+    async startRecievingPanelManagerResponse() {
+        await this.pdfViewerStarted
+        window.addEventListener('message', (e) => {
+            if (e.origin !== 'null') {
+                return
+            }
+            const data: PanelManagerResponse = e.data
+            switch (data.type) {
+                case 'restore_status': {
+                    document.getElementById('viewerContainer').scrollTop = data.scrollTop
+                    break
+                }
+                default: {
+                    break
+                }
+            }
+        })
+        this.sendToPanelManager({type: 'initialized'})
+    }
+
 }
 
 new LateXWorkshopPdfViewer()

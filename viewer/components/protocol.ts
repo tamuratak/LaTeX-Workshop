@@ -54,7 +54,10 @@ export type ClientRequest = {
 }
 
 export type PanelManagerResponse = {
-
+    type: 'restore_status',
+    scale: string,
+    scrollTop: number,
+    trim: number
 }
 
 export type PanelRequest = {
@@ -63,5 +66,9 @@ export type PanelRequest = {
     type: 'keyboard_event',
     event: any
 } | {
-    type: 'status'
+    type: 'status',
+    path: string,
+    scale: string,
+    scrollTop: number,
+    trim: number
 }

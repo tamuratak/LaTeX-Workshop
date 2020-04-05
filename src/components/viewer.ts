@@ -401,7 +401,7 @@ export class Viewer {
             return
         }
         for (const panel of panelSet.values()) {
-            if (panel.visible) {
+            if (panel.webviewPanel.visible) {
                 return
             }
         }

@@ -32,8 +32,10 @@ export type ViewerStatus = {
 
 class PdfViewerPanel {
     readonly webviewPanel: vscode.WebviewPanel
+    readonly pdfFilePath: string
 
-    constructor(panel: vscode.WebviewPanel) {
+    constructor(pdfFilePath: string, panel: vscode.WebviewPanel) {
+        this.pdfFilePath = pdfFilePath
         this.webviewPanel = panel
     }
 
@@ -49,6 +51,8 @@ class PdfViewerPanelSerializer implements vscode.WebviewPanelSerializer {
     deserializeWebviewPanel(panel: vscode.WebviewPanel, state: {path: string}) {
         const pdfFilePath = state.path
         panel.webview.html = this.extension.viewer.getPDFViewerContent(pdfFilePath)
+        const pdfPanel = new PdfViewerPanel(pdfFilePath, panel)
+        this.extension.viewer.pushPdfViewerPanel(pdfPanel)
         return Promise.resolve()
     }
 
@@ -187,23 +191,28 @@ export class Viewer {
             this.extension.logger.addLogMessage('Server port is undefined')
             return
         }
-        this.createClients(pdfFilePath)
-        const panelSet = this.getPanelSet(pdfFilePath)
-        if (!panelSet) {
-            return
-        }
+
         const panel = vscode.window.createWebviewPanel('latex-workshop-pdf', path.basename(pdfFilePath), viewColumn, {
             enableScripts: true,
             retainContextWhenHidden: true,
             portMapping : [{webviewPort: this.extension.server.port, extensionHostPort: this.extension.server.port}]
         })
         panel.webview.html = this.getPDFViewerContent(pdfFilePath)
-        const pdfPanel = new PdfViewerPanel(panel)
+        const pdfPanel = new PdfViewerPanel(pdfFilePath, panel)
+        this.pushPdfViewerPanel(pdfPanel)
+        return pdfPanel
+    }
+
+    pushPdfViewerPanel(pdfPanel: PdfViewerPanel) {
+        this.createClients(pdfPanel.pdfFilePath)
+        const panelSet = this.getPanelSet(pdfPanel.pdfFilePath)
+        if (!panelSet) {
+            return
+        }
         panelSet.add(pdfPanel)
-        panel.onDidDispose(() => {
+        pdfPanel.webviewPanel.onDidDispose(() => {
             panelSet.delete(pdfPanel)
         })
-        return pdfPanel
     }
 
     getPDFViewerContent(pdfFile: string): string {
@@ -219,7 +228,7 @@ export class Viewer {
             //
             // Note: this works on first load, or when navigating between groups, but not when
             //       navigating between tabs of the same group for some reason!
-            let iframe = document.getElementById('preview-panel');
+            const iframe = document.getElementById('preview-panel');
             window.onfocus = iframe.onload = function() {
                 setTimeout(function() { // doesn't work immediately
                     iframe.contentWindow.focus();
@@ -236,6 +245,11 @@ export class Viewer {
                     return;
                 }
                 switch (e.data.type) {
+                    case 'initialized': {
+                        const status = vsStore.getState();
+                        iframe.contentWindow.postMessage(status);
+                        break;
+                    }
                     case 'keyboard_event': {
                         window.dispatchEvent(new KeyboardEvent('keydown', e.data.event));
                         break;

@@ -1,7 +1,7 @@
 import {IDisposable, ILatexWorkshopPdfViewer, IPDFViewerApplication, IPDFViewerApplicationOptions} from './components/interface.js'
 import {SyncTex} from './components/synctex.js'
 import {PageTrimmer} from './components/pagetrimmer.js'
-import {ClientRequest, ServerResponse} from './components/protocol.js'
+import {ClientRequest, ServerResponse, PanelRequest} from './components/protocol.js'
 import * as utils from './components/utils.js'
 import {ViewerHistory} from './components/viewerhistory.js'
 
@@ -319,6 +319,13 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
         }, 30000)
     }
 
+    sendToPanelManager(msg: PanelRequest) {
+        if (!this.embedded) {
+            return
+        }
+        window.parent.postMessage(msg, '*')
+    }
+
     // To enable keyboard shortcuts of VS Code when the iframe is focused,
     // we have to dispatch keyboard events in the parent window.
     // See https://github.com/microsoft/vscode/issues/65452#issuecomment-586036474
@@ -341,10 +348,10 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
             if (utils.isPdfjsShortcut(obj)) {
                 return
             }
-            window.parent.postMessage({
+            this.sendToPanelManager({
                 type: 'keyboard_event',
                 event: obj
-            }, '*')
+            })
         })
     }
 }

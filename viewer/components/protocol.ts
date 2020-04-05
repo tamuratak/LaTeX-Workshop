@@ -52,3 +52,16 @@ export type ClientRequest = {
     textBeforeSelection: string,
     textAfterSelection: string
 }
+
+export type PanelManagerResponse = {
+
+}
+
+export type PanelRequest = {
+    type: 'initialized'
+} | {
+    type: 'keyboard_event',
+    event: any
+} | {
+    type: 'status'
+}

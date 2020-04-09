@@ -50,7 +50,7 @@ class PdfViewerPanelSerializer implements vscode.WebviewPanelSerializer {
 
     deserializeWebviewPanel(panel: vscode.WebviewPanel, state: {path: string}) {
         const pdfFilePath = state.path
-        panel.webview.html = this.extension.viewer.getPDFViewerContent(pdfFilePath)
+        panel.webview.html = this.extension.viewer.getPDFViewerContent(pdfFilePath, panel.webview)
         const pdfPanel = new PdfViewerPanel(pdfFilePath, panel)
         this.extension.viewer.pushPdfViewerPanel(pdfPanel)
         return Promise.resolve()
@@ -197,7 +197,8 @@ export class Viewer {
             retainContextWhenHidden: true,
             portMapping : [{webviewPort: this.extension.server.port, extensionHostPort: this.extension.server.port}]
         })
-        panel.webview.html = this.getPDFViewerContent(pdfFilePath)
+
+        panel.webview.html = this.getPDFViewerContent(pdfFilePath, panel.webview)
         const pdfPanel = new PdfViewerPanel(pdfFilePath, panel)
         this.pushPdfViewerPanel(pdfPanel)
         return pdfPanel
@@ -215,55 +216,21 @@ export class Viewer {
         })
     }
 
-    getPDFViewerContent(pdfFile: string): string {
+    getPDFViewerContent(pdfFile: string, webview: vscode.Webview): string {
         // viewer/viewer.js automatically requests the file to server.ts, and server.ts decodes the encoded path of PDF file.
         const url = `http://localhost:${this.extension.server.port}/viewer.html?incode=1&file=${encodePathWithPrefix(pdfFile)}`
+        const jsPath = webview.asWebviewUri(vscode.Uri.file(path.join(this.extension.extensionRoot, 'resources', 'viewer', 'viewer.js')))
+        const cspSrc = webview.cspSource
         return `
-            <!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src http://localhost:* http://127.0.0.1:*; script-src 'unsafe-inline'; style-src 'unsafe-inline';"></head>
-            <body><iframe id="preview-panel" class="preview-panel" src="${url}" style="position:absolute; border: none; left: 0; top: 0; width: 100%; height: 100%;">
-            </iframe>
+            <!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src http://localhost:* http://127.0.0.1:*; script-src 'unsafe-inline' ${cspSrc}; style-src 'unsafe-inline';"></head>
+            <body>
             <script>
-            // when the iframe loads, or when the tab gets focus again later, move the
-            // the focus to the iframe so that keyboard navigation works in the pdf.
-            //
-            // Note: this works on first load, or when navigating between groups, but not when
-            //       navigating between tabs of the same group for some reason!
-            const iframe = document.getElementById('preview-panel');
-            window.onfocus = iframe.onload = function() {
-                setTimeout(function() { // doesn't work immediately
-                    iframe.contentWindow.focus();
-                }, 100);
-            }
-
-            const vsStore = acquireVsCodeApi();
-            // vsStore.setState({path: '${pdfFile}'});
-            // To enable keyboard shortcuts of VS Code when the iframe is focused,
-            // we have to dispatch keyboard events in the parent window.
-            // See https://github.com/microsoft/vscode/issues/65452#issuecomment-586036474
-            window.addEventListener('message', (e) => {
-                if (e.origin !== 'http://localhost:${this.extension.server.port}') {
-                    return;
-                }
-                switch (e.data.type) {
-                    case 'initialized': {
-                        const status = vsStore.getState();
-                        status.type = 'restore_status';
-                        iframe.contentWindow.postMessage(status, '*');
-                        break;
-                    }
-                    case 'keyboard_event': {
-                        window.dispatchEvent(new KeyboardEvent('keydown', e.data.event));
-                        break;
-                    }
-                    case 'status': {
-                        vsStore.setState(e.data);
-                        break;
-                    }
-                    default:
-                        break;
-                }
-            });
+            var extensionServerPort = '${this.extension.server.port}'
             </script>
+            <script src='${jsPath}'>
+            </script>
+            <iframe id="preview-panel" class="preview-panel" src="${url}" style="position:absolute; border: none; left: 0; top: 0; width: 100%; height: 100%;">
+            </iframe>
             </body></html>
         `
     }

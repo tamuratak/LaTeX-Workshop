@@ -8,7 +8,7 @@ export class MathPreviewPanel {
     extension: Extension
     mathPreview: MathPreview
     panel?: vscode.WebviewPanel
-    prevDocument?: vscode.TextDocument
+    prevDocumentUri?: string
     prevCursorPosition?: vscode.Position
     prevNewCommands?: string
 
@@ -82,17 +82,18 @@ export class MathPreviewPanel {
         if (!editor || document?.languageId !== 'latex') {
             return
         }
+        const documentUri = document.uri.toString()
         const position = editor.selection.active
         const texMath = this.getTexMath(document, position)
         if (!texMath) {
             return
         }
         let cachedCommands: string | undefined
-        if ( position.line === this.prevCursorPosition?.line && document.uri.toString() === this.prevDocument?.uri.toString() ) {
+        if ( position.line === this.prevCursorPosition?.line && documentUri === this.prevDocumentUri ) {
             cachedCommands = this.prevNewCommands
         }
         const {svgDataUrl, newCommands} = await this.mathPreview.generateSVG(document, texMath, cachedCommands)
-        this.prevDocument = document
+        this.prevDocumentUri = documentUri
         this.prevNewCommands = newCommands
         this.prevCursorPosition = position
         return this.panel.webview.postMessage({type: 'mathImage', src: svgDataUrl })

@@ -249,8 +249,8 @@ export class MathPreview {
         return newTex
     }
 
-    async generateSVG(document: vscode.TextDocument, tex: TexMathEnv) {
-        const newCommands: string = (await this.findNewCommand(document.getText())).join('')
+    async generateSVG(document: vscode.TextDocument, tex: TexMathEnv, newCommands0?: string) {
+        const newCommands: string = newCommands0 ?? (await this.findNewCommand(document.getText())).join('')
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const scale = configuration.get('hover.preview.scale') as number
         const s = this.mathjaxify(tex.texString, tex.envname)
@@ -259,7 +259,7 @@ export class MathPreview {
             format: 'TeX',
             svgNode: true,
         }, {scale, color: this.color})
-        return utils.svgToDataUrl(xml)
+        return {svgDataUrl: utils.svgToDataUrl(xml), newCommands}
     }
 
     private stripTeX(tex: string): string {

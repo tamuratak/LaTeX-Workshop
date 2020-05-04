@@ -8,6 +8,9 @@ export class MathPreviewPanel {
     extension: Extension
     mathPreview: MathPreview
     panel?: vscode.WebviewPanel
+    prevDocument?: vscode.TextDocument
+    prevCursorPosition?: vscode.Position
+    prevNewCommands?: string
 
     constructor(extension: Extension) {
         this.extension = extension
@@ -84,7 +87,14 @@ export class MathPreviewPanel {
         if (!texMath) {
             return
         }
-        const svgDataUrl = await this.mathPreview.generateSVG(document, texMath)
+        let cachedCommands: string | undefined
+        if ( position.line === this.prevCursorPosition?.line && document.uri.toString() === this.prevDocument?.uri.toString() ) {
+            cachedCommands = this.prevNewCommands
+        }
+        const {svgDataUrl, newCommands} = await this.mathPreview.generateSVG(document, texMath, cachedCommands)
+        this.prevDocument = document
+        this.prevNewCommands = newCommands
+        this.prevCursorPosition = position
         return this.panel.webview.postMessage({type: 'mathImage', src: svgDataUrl })
     }
 

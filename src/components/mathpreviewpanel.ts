@@ -31,6 +31,7 @@ export class MathPreviewPanel {
             { enableScripts: true, retainContextWhenHidden: true }
         )
         panel.onDidDispose(() => {
+            this.clearCache()
             this.panel = undefined
         })
         const jsPath = vscode.Uri.file(path.join(this.extension.extensionRoot, './resources/mathpreviewpanel/mathpreview.js'))
@@ -43,6 +44,13 @@ export class MathPreviewPanel {
     close() {
         this.panel?.dispose()
         this.panel = undefined
+        this.clearCache()
+    }
+
+    clearCache() {
+        this.prevDocumentUri = undefined
+        this.prevCursorPosition = undefined
+        this.prevNewCommands = undefined
     }
 
     getHtml(jsPathSrc: vscode.Uri) {
@@ -75,17 +83,20 @@ export class MathPreviewPanel {
 
     async update() {
         if (!this.panel) {
+            this.clearCache()
             return
         }
         const editor = vscode.window.activeTextEditor
         const document = editor?.document
         if (!editor || document?.languageId !== 'latex') {
+            this.clearCache()
             return
         }
         const documentUri = document.uri.toString()
         const position = editor.selection.active
         const texMath = this.getTexMath(document, position)
         if (!texMath) {
+            this.clearCache()
             return
         }
         let cachedCommands: string | undefined

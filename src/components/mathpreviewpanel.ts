@@ -82,8 +82,7 @@ export class MathPreviewPanel {
     }
 
     async update() {
-        if (!this.panel) {
-            this.clearCache()
+        if (!this.panel || !this.panel.visible) {
             return
         }
         const editor = vscode.window.activeTextEditor

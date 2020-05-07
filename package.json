@@ -85,8 +85,7 @@
           ".tex",
           ".ltx",
           ".ctx"
-        ],
-        "configuration": "./syntax/syntax.json"
+        ]
       },
       {
         "id": "bibtex",

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+// import * as fs from 'fs'
 import * as path from 'path'
 import * as process from 'process'
 
@@ -123,6 +124,10 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('latex-workshop.bibsort', () => extension.bibtexFormater.bibtexFormat(true, false))
     vscode.commands.registerCommand('latex-workshop.bibalign', () => extension.bibtexFormater.bibtexFormat(false, true))
     vscode.commands.registerCommand('latex-workshop.bibalignsort', () => extension.bibtexFormater.bibtexFormat(true, true))
+
+//    const syntaxFilePath = path.join(extension.extensionRoot, 'syntax', 'syntax.json')
+//    const languageConf: syntaxJson = JSON.parse(fs.readFileSync(syntaxFilePath).toString())
+    vscode.languages.setLanguageConfiguration('latex', {brackets: [['\\left(', '\\right)']]})
 
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument( (e: vscode.TextDocument) => {
         if (extension.manager.hasTexId(e.languageId)) {

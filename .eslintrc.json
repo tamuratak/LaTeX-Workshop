@@ -48,7 +48,6 @@
         "@typescript-eslint/no-unused-expressions": "error",
         "prefer-arrow-callback": [ "error", { "allowUnboundThis": false } ],
         "@typescript-eslint/no-parameter-properties": "off",
-        "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-inferrable-types": "off",
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-misused-promises": [ "error", { "checksVoidReturn": false } ],

@@ -77,22 +77,22 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
         })
     }
 
-    onWillStartPdfViewer(cb: (e: Event) => any): IDisposable {
+    onWillStartPdfViewer(cb: (e: Event) => unknown): IDisposable {
         document.addEventListener('webviewerloaded', cb, {once: true})
         return { dispose: () => document.removeEventListener('webviewerloaded', cb) }
     }
 
-    onDidStartPdfViewer(cb: (e: Event) => any): IDisposable {
+    onDidStartPdfViewer(cb: (e: Event) => unknown): IDisposable {
         document.addEventListener('documentloaded', cb, {once: true})
         return { dispose: () => document.removeEventListener('documentloaded', cb) }
     }
 
-    onDidLoadPdfFile(cb: (e: Event) => any, option?: {once: boolean}): IDisposable {
+    onDidLoadPdfFile(cb: (e: Event) => unknown, option?: {once: boolean}): IDisposable {
         document.addEventListener('pagesinit', cb, option)
         return { dispose: () => document.removeEventListener('pagesinit', cb) }
     }
 
-    onDidRenderPdfFile(cb: (e: Event) => any, option?: {once: boolean}): IDisposable {
+    onDidRenderPdfFile(cb: (e: Event) => unknown, option?: {once: boolean}): IDisposable {
         document.addEventListener('pagerendered', cb, option)
         return { dispose: () => document.removeEventListener('pagerendered', cb) }
     }

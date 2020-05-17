@@ -60,7 +60,17 @@ export type PanelRequest = {
     type: 'initialized'
 } | {
     type: 'keyboard_event',
-    event: any
+    event: {
+        altKey: boolean,
+        code: string,
+        ctrlKey: boolean,
+        isComposing: boolean,
+        key: string,
+        location: number,
+        metaKey: boolean,
+        repeat: boolean,
+        shiftKey: boolean
+    }
 } | {
     type: 'state',
     state: PdfViewerState

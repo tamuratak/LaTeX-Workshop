@@ -53,7 +53,7 @@ export function getCurrentThemeLightness(): 'light' | 'dark' {
         if (extension.packageJSON === undefined || extension.packageJSON.contributes === undefined || extension.packageJSON.contributes.themes === undefined) {
             continue
         }
-        const candidateThemes = extension.packageJSON.contributes.themes.filter( (themePkg: any) => themePkg.label === colorTheme || themePkg.id === colorTheme)
+        const candidateThemes = extension.packageJSON.contributes.themes.filter( (themePkg: {label: string, id: string}) => themePkg.label === colorTheme || themePkg.id === colorTheme)
         if (candidateThemes.length === 0) {
             continue
         }

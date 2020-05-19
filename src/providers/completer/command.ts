@@ -16,7 +16,7 @@ interface CmdItemEntry {
     postAction?: string
 }
 
-export interface Suggestion extends vscode.CompletionItem {
+export interface CmdEntry extends vscode.CompletionItem {
     package: string
 }
 
@@ -25,11 +25,11 @@ export class Command implements IProvider {
     private environment: Environment
 
     packages: string[] = []
-    bracketCmds: {[key: string]: Suggestion} = {}
+    bracketCmds: {[key: string]: CmdEntry} = {}
     definedCmds: {[key: string]: {file: string, location: vscode.Location}} = {}
-    private defaultCmds: Suggestion[] = []
-    private defaultSymbols: Suggestion[] = []
-    private packageCmds: {[pkg: string]: Suggestion[]} = {}
+    private defaultCmds: CmdEntry[] = []
+    private defaultSymbols: CmdEntry[] = []
+    private packageCmds: {[pkg: string]: CmdEntry[]} = {}
 
     constructor(extension: Extension, environment: Environment) {
         this.extension = extension
@@ -73,7 +73,7 @@ export class Command implements IProvider {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const useOptionalArgsEntries = configuration.get('intellisense.optionalArgsEntries.enabled')
 
-        const suggestions: Suggestion[] = []
+        const suggestions: CmdEntry[] = []
         const cmdList: string[] = [] // This holds defined commands without the backslash
         // Insert default commands
         this.defaultCmds.forEach(cmd => {
@@ -200,7 +200,7 @@ export class Command implements IProvider {
         }
     }
 
-    getCmdName(item: Suggestion, removeArgs = false): string {
+    getCmdName(item: CmdEntry, removeArgs = false): string {
         const label = item.label.startsWith('\\') ? item.label.slice(1) : item.label
         const name = item.filterText ? item.filterText : label
         if (removeArgs) {
@@ -210,8 +210,8 @@ export class Command implements IProvider {
         return name
     }
 
-    private getCmdFromNodeArray(file: string, nodes: latexParser.Node[], cmdList: string[] = []): Suggestion[] {
-        let cmds: Suggestion[] = []
+    private getCmdFromNodeArray(file: string, nodes: latexParser.Node[], cmdList: string[] = []): CmdEntry[] {
+        let cmds: CmdEntry[] = []
         nodes.forEach(node => {
             cmds = cmds.concat(this.getCmdFromNode(file, node, cmdList))
         })
@@ -286,12 +286,12 @@ export class Command implements IProvider {
         })
     }
 
-    private getCmdFromNode(file: string, node: latexParser.Node, cmdList: string[] = []): Suggestion[] {
-        const cmds: Suggestion[] = []
+    private getCmdFromNode(file: string, node: latexParser.Node, cmdList: string[] = []): CmdEntry[] {
+        const cmds: CmdEntry[] = []
         if (latexParser.isDefCommand(node)) {
            const name = node.token.slice(1)
             if (!cmdList.includes(name)) {
-                const cmd: Suggestion = {
+                const cmd: CmdEntry = {
                     label: `\\${name}`,
                     kind: vscode.CompletionItemKind.Function,
                     documentation: '`' + name + '`',
@@ -304,7 +304,7 @@ export class Command implements IProvider {
             }
         } else if (latexParser.isCommand(node)) {
             if (!cmdList.includes(node.name)) {
-                const cmd: Suggestion = {
+                const cmd: CmdEntry = {
                     label: `\\${node.name}`,
                     kind: vscode.CompletionItemKind.Function,
                     documentation: '`' + node.name + '`',
@@ -329,7 +329,7 @@ export class Command implements IProvider {
                     }
                 }
                 if (!cmdList.includes(label)) {
-                    const cmd: Suggestion = {
+                    const cmd: CmdEntry = {
                         label: `\\${label}`,
                         kind: vscode.CompletionItemKind.Function,
                         documentation: '`' + label + '`',
@@ -383,9 +383,9 @@ export class Command implements IProvider {
         return args
     }
 
-    private getCmdFromContent(file: string, content: string): Suggestion[] {
+    private getCmdFromContent(file: string, content: string): CmdEntry[] {
         const cmdReg = /\\([a-zA-Z@_]+(?::[a-zA-Z]*)?)({[^{}]*})?({[^{}]*})?({[^{}]*})?/g
-        const cmds: Suggestion[] = []
+        const cmds: CmdEntry[] = []
         const cmdList: string[] = []
         let explSyntaxOn: boolean = false
         while (true) {
@@ -411,7 +411,7 @@ export class Command implements IProvider {
             if (cmdList.includes(result[1])) {
                 continue
             }
-            const cmd: Suggestion = {
+            const cmd: CmdEntry = {
                 label: `\\${result[1]}`,
                 kind: vscode.CompletionItemKind.Function,
                 documentation: '`' + result[1] + '`',
@@ -436,7 +436,7 @@ export class Command implements IProvider {
                 continue
             }
 
-            const cmd: Suggestion = {
+            const cmd: CmdEntry = {
                 label: `\\${result[1]}`,
                 kind: vscode.CompletionItemKind.Function,
                 documentation: '`' + result[1] + '`',
@@ -473,12 +473,12 @@ export class Command implements IProvider {
         return text
     }
 
-    private entryCmdToCompletion(itemKey: string, item: CmdItemEntry): Suggestion {
+    private entryCmdToCompletion(itemKey: string, item: CmdItemEntry): CmdEntry {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const useTabStops = configuration.get('intellisense.useTabStops.enabled')
         const backslash = item.command.startsWith(' ') ? '' : '\\'
         const label = item.label ? `${item.label}` : `${backslash}${item.command}`
-        const suggestion: Suggestion = {
+        const suggestion: CmdEntry = {
             label,
             kind: vscode.CompletionItemKind.Function,
             package: 'latex'

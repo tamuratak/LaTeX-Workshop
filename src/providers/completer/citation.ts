@@ -5,7 +5,7 @@ import {bibtexParser} from 'latex-utensils'
 import {Extension} from '../../main'
 import {IProvider} from './interface'
 
-export interface Suggestion extends vscode.CompletionItem {
+export interface CiteEntry extends vscode.CompletionItem {
     key: string,
     fields: {[key: string]: string},
     file: string,
@@ -14,7 +14,7 @@ export interface Suggestion extends vscode.CompletionItem {
 
 export class Citation implements IProvider {
     extension: Extension
-    private bibEntries: {[file: string]: Suggestion[]} = {}
+    private bibEntries: {[file: string]: CiteEntry[]} = {}
 
     constructor(extension: Extension) {
         this.extension = extension
@@ -84,9 +84,9 @@ export class Citation implements IProvider {
         })
     }
 
-    getEntryDict(): {[key: string]: Suggestion} {
+    getEntryDict(): {[key: string]: CiteEntry} {
         const suggestions = this.updateAll()
-        const entries: {[key: string]: Suggestion} = {}
+        const entries: {[key: string]: CiteEntry} = {}
         suggestions.forEach(entry => entries[entry.key] = entry)
         return entries
     }
@@ -111,8 +111,8 @@ export class Citation implements IProvider {
         return bibs
     }
 
-    private updateAll(bibFiles?: string[]): Suggestion[] {
-        let suggestions: Suggestion[] = []
+    private updateAll(bibFiles?: string[]): CiteEntry[] {
+        let suggestions: CiteEntry[] = []
         // Update the dirty content in active text editor, get bibitems
         // *** This is done after stop typing for 5 seconds. Defined in `onDidChangeTextDocument` ***
         // if (vscode.window.activeTextEditor) {
@@ -174,7 +174,7 @@ export class Citation implements IProvider {
                 if (entry.internalKey === undefined) {
                     return
                 }
-                const item: Suggestion = {
+                const item: CiteEntry = {
                     key: entry.internalKey,
                     label: entry.internalKey,
                     file,
@@ -209,9 +209,9 @@ export class Citation implements IProvider {
             this.parseContent(file, content)
     }
 
-    private parseContent(file: string, content: string): Suggestion[] {
+    private parseContent(file: string, content: string): CiteEntry[] {
         const itemReg = /^(?!%).*\\bibitem(?:\[[^[\]{}]*\])?{([^}]*)}/gm
-        const items: Suggestion[] = []
+        const items: CiteEntry[] = []
         while (true) {
             const result = itemReg.exec(content)
             if (result === null) {

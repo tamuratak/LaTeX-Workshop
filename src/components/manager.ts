@@ -8,9 +8,9 @@ import {latexParser} from 'latex-utensils'
 import * as utils from '../utils/utils'
 
 import {Extension} from '../main'
-import {Suggestion as CiteEntry} from '../providers/completer/citation'
-import {Suggestion as CmdEntry} from '../providers/completer/command'
-import {Suggestion as EnvEntry} from '../providers/completer/environment'
+import {CiteEntry} from '../providers/completer/citation'
+import {CmdEntry} from '../providers/completer/command'
+import {EnvEntry} from '../providers/completer/environment'
 
 interface Content {
     [filepath: string]: { // tex file name

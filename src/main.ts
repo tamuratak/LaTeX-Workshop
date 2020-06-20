@@ -36,6 +36,8 @@ import {SectionNodeProvider, StructureTreeView} from './providers/structure'
 import {DefinitionProvider} from './providers/definition'
 import {LatexFormatterProvider} from './providers/latexformatter'
 import {FoldingProvider, WeaveFoldingProvider} from './providers/folding'
+import {SelectionProvider} from './providers/selection'
+
 import { SnippetPanel } from './components/snippetpanel'
 import { BibtexFormatter, BibtexFormatterProvider } from './providers/bibtexformatter'
 import {SnippetViewProvider} from './providers/snippetview'
@@ -267,6 +269,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerCodeActionsProvider(latexSelector, extension.codeActions))
     context.subscriptions.push(vscode.languages.registerFoldingRangeProvider(latexSelector, new FoldingProvider(extension)))
     context.subscriptions.push(vscode.languages.registerFoldingRangeProvider(weaveSelector, new WeaveFoldingProvider(extension)))
+    context.subscriptions.push(vscode.languages.registerSelectionRangeProvider(latexSelector, new SelectionProvider(extension)))
 
     context.subscriptions.push(vscode.window.registerWebviewViewProvider('latex-snippet-view', new SnippetViewProvider(extension), {webviewOptions: {retainContextWhenHidden: true}}))
 

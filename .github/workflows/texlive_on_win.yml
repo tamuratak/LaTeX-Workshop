@@ -40,6 +40,10 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: 12.x
+    - uses: actions/upload-artifact@v2
+      with:
+        name: coredump
+        path: test/coredump/
     - run: |
         npm ci
         npm run compile

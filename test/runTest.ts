@@ -50,6 +50,7 @@ async function runTestsOnEachFixture(targetName: 'build' | 'viewer' | 'completio
             launchArgs: [
                 testWorkspace,
                 '--user-data-dir=' + tmpdir.name,
+                '--crash-reporter-directory=' + path.join(extensionDevelopmentPath, 'test', 'coredump'),
                 '--disable-extensions',
                 '--disable-gpu'
             ],

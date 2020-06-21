@@ -4,6 +4,10 @@ import {SelectionRange, SelectionRangeProvider, TextDocument, Position} from 'vs
 
 import {Extension} from '../main'
 
+type Pos = {
+    line: number,
+    column: number
+}
 
 function toVscodeRange(loc: latexParser.Location) {
     return new vscode.Range(loc.start.line-1, loc.start.column-1, loc.end.line-1, loc.end.column-1)
@@ -21,7 +25,7 @@ export class SelectionProvider implements SelectionRangeProvider {
         }
         const ret: SelectionRange[] = []
         positions.forEach(pos0 => {
-            const pos = {line: pos0.line + 1, column: pos0.character + 1}
+            const pos: Pos = {line: pos0.line + 1, column: pos0.character + 1}
             const result = latexParser.findNodeAt(latexAst.content, pos)
             const selectionRange = this.resultToRange(result)
             if (selectionRange) {
@@ -31,6 +35,12 @@ export class SelectionProvider implements SelectionRangeProvider {
         return ret
     }
 
+    /*
+    trasformResult(node: latexParser.Node, pos: Pos) {
+        if (latexParser.isMathEnv(node) || latexParser.isMathEnvAligned(node)) {
+        }
+    }
+*/
     resultToRange(result: ReturnType<typeof latexParser.findNodeAt>): SelectionRange | undefined {
         if (!result) {
             return

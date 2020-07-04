@@ -35,6 +35,7 @@ import { SnippetPanel } from './components/snippetpanel'
 import { BibtexFormater } from './components/bibtexformater'
 
 import {checkDeprecatedFeatures, newVersionMessage, obsoleteConfigCheck} from './config'
+import {IExtension, IExtensionBase} from './iextension'
 
 function conflictExtensionCheck() {
     function check(extensionID: string, name: string, suggestion: string) {
@@ -289,7 +290,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 }
 
-export class Extension {
+export class Extension implements IExtension, IExtensionBase {
     packageInfo: { version?: string } = {}
     extensionRoot: string
     logger: Logger

@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 import * as path from 'path'
 import * as fs from 'fs'
 
-import { Extension } from '../../main'
+import { IExtensionBase } from '../../iextension'
 import { convertFilenameEncoding } from '../../utils/utils'
 
 const latexPattern = /^Output\swritten\son\s(.*)\s\(.*\)\.$/gm
@@ -46,14 +46,14 @@ interface LinterLogEntry {
 interface LogEntry { type: string, file: string, text: string, line: number }
 
 export class Parser {
-    extension: Extension
+    extension: IExtensionBase
     isLaTeXmkSkipped: boolean = false
     buildLog: LogEntry[] = []
     buildLogRaw: string = ''
     compilerDiagnostics = vscode.languages.createDiagnosticCollection('LaTeX')
     linterDiagnostics = vscode.languages.createDiagnosticCollection('ChkTeX')
 
-    constructor(extension: Extension) {
+    constructor(extension: IExtensionBase) {
         this.extension = extension
     }
 

@@ -51,7 +51,7 @@
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-inferrable-types": "off",
         "@typescript-eslint/no-empty-function": "off",
-        "@typescript-eslint/no-misused-promises": [ "error", { "checksVoidReturn": false } ],
+        "@typescript-eslint/no-misused-promises": [ "error", { "checksVoidReturn": true } ],
         "curly": "error",
         "eol-last": "error",
         "no-caller": "error",

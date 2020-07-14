@@ -227,11 +227,12 @@ export class Viewer {
             return
         }
         if (editor && viewColumn !== vscode.ViewColumn.Active) {
-            setTimeout(async () => {
-                await vscode.window.showTextDocument(editor.document, editor.viewColumn)
-                if (tabEditorGroup === 'left' && viewColumn !== vscode.ViewColumn.One) {
-                    await vscode.commands.executeCommand('workbench.action.moveActiveEditorGroupRight')
-                }
+            setTimeout(() => {
+                vscode.window.showTextDocument(editor.document, editor.viewColumn).then(() => {
+                    if (tabEditorGroup === 'left' && viewColumn !== vscode.ViewColumn.One) {
+                        vscode.commands.executeCommand('workbench.action.moveActiveEditorGroupRight')
+                    }
+                })
             }, 500)
         }
         this.extension.logger.addLogMessage(`Open PDF tab for ${pdfFile}`)

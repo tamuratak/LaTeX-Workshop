@@ -79,3 +79,18 @@ export function isPdfjsShortcut(e: Pick<KeyboardEvent, 'altKey' | 'ctrlKey' | 'm
     }
     return false
 }
+
+export function elementWidth(idName: string, forceDisplay = true): number {
+    const element = document.getElementById(idName) as HTMLElement
+    const originalDisplay = element.style.display
+    if (forceDisplay) {
+        element.style.display = 'block'
+    }
+    const style = window.getComputedStyle(element)
+    const width = element.offsetWidth
+    const margin = parseFloat(style.marginLeft) + parseFloat(style.marginRight)
+    if (forceDisplay) {
+        element.style.display = originalDisplay
+    }
+    return width + margin
+}

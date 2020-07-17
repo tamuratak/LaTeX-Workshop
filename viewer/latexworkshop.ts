@@ -66,6 +66,7 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
             utils.callCbOnDidOpenWebSocket(this.socket, () => {
                 this.send({type:'loaded', path:this.pdfFilePath})
             })
+            this.setCssRule()
         }, {once: true})
 
         this.hidePrintButton()
@@ -325,6 +326,22 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
                 clearInterval(this.hideToolbarInterval)
             }
         }, 3000)
+    }
+
+    private setCssRule() {
+        let styleSheet: CSSStyleSheet | undefined
+        for (const style of document.styleSheets) {
+            if (style.href && /latexworkshop/.exec(style.href)) {
+                styleSheet = style
+            }
+        }
+        if (!styleSheet) {
+            return
+        }
+        const scaleWidth = utils.elementWidth('scaleSelectContainer')
+        const maxWidth = this.embedded ? 550 + scaleWidth : 550 + 34 + scaleWidth
+        const rule = `@media all and (max-width: ${maxWidth}px) { #scaleSelectContainer { display: none; } }`
+        styleSheet.insertRule(rule, 20)
     }
 
     private decodeQuery() {

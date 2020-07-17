@@ -339,9 +339,12 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
             return
         }
         const scaleWidth = utils.elementWidth('scaleSelectContainer')
-        const maxWidth = this.embedded ? 550 + scaleWidth : 550 + 34 + scaleWidth
-        const rule = `@media all and (max-width: ${maxWidth}px) { #scaleSelectContainer { display: none; } }`
-        styleSheet.insertRule(rule, 20)
+        const trimMaxWidth = this.embedded ? 550 + scaleWidth : 550 + 34 + scaleWidth
+        const trimRule = `@media all and (max-width: ${trimMaxWidth}px) { #scaleSelectContainer { display: none; } }`
+        styleSheet.insertRule(trimRule)
+        const smallViewMaxWidth = this.embedded ? 820 : 820 + 34
+        const smallViewRule = `@media all and (max-width: ${smallViewMaxWidth}px) { .hiddenSmallView, .hiddenSmallView * { display: none; } }`
+        styleSheet.insertRule(smallViewRule)
     }
 
     private decodeQuery() {

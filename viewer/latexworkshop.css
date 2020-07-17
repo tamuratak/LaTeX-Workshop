@@ -120,12 +120,6 @@ html #outerContainer.sidebarOpen > #sidebarContainer {
     display: none  !important;
 }
 
-@media all and (max-width: 820px) {
-    .hiddenSmallView, .hiddenSmallView * {
-        display: none;
-    }
-}
-
 @media all and (max-width: 520px) {
     #trimSelectContainer {
         display: none;

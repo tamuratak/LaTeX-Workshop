@@ -325,6 +325,10 @@ export class Viewer {
                 if (e.origin !== 'http://localhost:${this.extension.server.port}') {
                     return;
                 }
+                if (!e.data.type) {
+                    console.log('Webview of LateX Workshop received a message of unknown type: ' + JSON.stringify(e.data))
+                    return
+                }
                 switch (e.data.type) {
                     case 'initialized': {
                         const state = vsStore.getState();

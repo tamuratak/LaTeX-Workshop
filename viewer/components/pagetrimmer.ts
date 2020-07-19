@@ -4,6 +4,7 @@ declare const PDFViewerApplication: IPDFViewerApplication
 
 let currentUserSelectScale: number | undefined
 let originalUserSelectIndex: number | undefined
+let originalUserSelectScale: string | undefined
 
 function getTrimScale() {
     const trimSelect = document.getElementById('trimSelect') as HTMLSelectElement
@@ -41,6 +42,7 @@ function getTrimScale() {
         scaleSelect.dispatchEvent(ev)
         currentUserSelectScale = undefined
         originalUserSelectIndex = undefined
+        originalUserSelectScale = undefined
         const viewer = document.getElementById('viewer') as HTMLElement
         for ( const page of viewer.getElementsByClassName('page') ) {
             for ( const layer of page.getElementsByClassName('annotationLayer') ) {
@@ -61,6 +63,7 @@ function getTrimScale() {
     }
     if (originalUserSelectIndex === undefined) {
         originalUserSelectIndex = scaleSelect.selectedIndex
+        originalUserSelectScale = PDFViewerApplication.pdfViewer.currentScaleValue
     }
     const opt = document.getElementById('trimOption') as HTMLOptionElement
     opt.value = (currentUserSelectScale * trimScale).toString()
@@ -181,5 +184,9 @@ export class PageTrimmer {
                 trimPage(page)
             }
         })
+    }
+
+    get originalUserSelectScale() {
+        return originalUserSelectScale
     }
 }

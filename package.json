@@ -3,7 +3,7 @@
   "displayName": "LaTeX Workshop",
   "description": "Boost LaTeX typesetting efficiency with preview, compile, autocomplete, colorize, and more.",
   "icon": "icons/icon.png",
-  "version": "8.11.1",
+  "version": "8.11.2-beta.103",
   "publisher": "James-Yu",
   "license": "MIT",
   "homepage": "https://github.com/James-Yu/LaTeX-Workshop",
@@ -1957,7 +1957,7 @@
     "pdfjs-dist": "2.4.456",
     "strip-json-comments": "^3.0.1",
     "tmp": "^0.2.1",
-    "vsls": "^1.0.2532",
+    "vsls": "^1.0.2594",
     "workerpool": "^6.0.0",
     "ws": "^5.1.1"
   },

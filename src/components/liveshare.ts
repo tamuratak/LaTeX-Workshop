@@ -36,6 +36,7 @@ export class LiveShare {
     private async init() {
         this.liveshare = await vsls.getApi()
         if (!this.liveshare) {
+            this.extension.logger.addLogMessage('vsls.getApi fails.')
             return
         }
         this.sessionRole = this.liveshare.session.role
@@ -91,14 +92,12 @@ export class LiveShare {
      * *****************************************************************/
 
     private async initHost() {
-        if (this.liveshare) {
-            this.hostService = await this.liveshare.shareService(serviceName)
-            if (this.hostService) {
-                this.hostService.onRequest(requestPdfRequestName, async (args: any[]) => await this.onRequestPdf(args[0]))
-                this.hostService.onRequest(invokeRemoteCommandRequestName, (args: any[]) => { this.invokeRemoteCommand(args[0], args[1]) })
-            } else {
-                this.extension.logger.addLogMessage('liveshare.shareService fails.')
-            }
+        this.hostService = await this.liveshare?.shareService(serviceName)
+        if (this.hostService) {
+            this.hostService.onRequest(requestPdfRequestName, async (args: any[]) => await this.onRequestPdf(args[0]))
+            this.hostService.onRequest(invokeRemoteCommandRequestName, (args: any[]) => { this.invokeRemoteCommand(args[0], args[1]) })
+        } else {
+            this.extension.logger.addLogMessage('liveshare.shareService fails.')
         }
     }
 
@@ -156,13 +155,13 @@ export class LiveShare {
      * *****************************************************************/
 
     private async initGuest() {
-        if (this.liveshare) {
-            this.guestService = await this.liveshare.getSharedService(serviceName)
-            if (this.guestService) {
-                this.guestService.onNotify(pdfUpdateNotificationName, async (args) => await this.onPdfUpdated(args as PdfArgs))
-                this.guestService.onNotify(logUpdateNotificationName, async (args) => await this.onLogUpdated((args as any).message))
-                this.guestService.onNotify(compilerUpdateNotificationName, async (args) => await this.onCompilerUpdated((args as any).message))
-            }
+        this.guestService = await this.liveshare?.getSharedService(serviceName)
+        if (this.guestService) {
+            this.guestService.onNotify(pdfUpdateNotificationName, async (args) => await this.onPdfUpdated(args as PdfArgs))
+            this.guestService.onNotify(logUpdateNotificationName, async (args) => await this.onLogUpdated((args as any).message))
+            this.guestService.onNotify(compilerUpdateNotificationName, async (args) => await this.onCompilerUpdated((args as any).message))
+        } else {
+            this.extension.logger.addLogMessage('liveshare.getSharedService fails.')
         }
     }
 

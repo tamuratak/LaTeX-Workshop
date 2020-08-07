@@ -96,6 +96,8 @@ export class LiveShare {
             if (this.hostService) {
                 this.hostService.onRequest(requestPdfRequestName, async (args: any[]) => await this.onRequestPdf(args[0]))
                 this.hostService.onRequest(invokeRemoteCommandRequestName, (args: any[]) => { this.invokeRemoteCommand(args[0], args[1]) })
+            } else {
+                this.extension.logger.addLogMessage('liveshare.shareService fails.')
             }
         }
     }

@@ -5,6 +5,7 @@ import * as process from 'process'
 import {Commander} from './commander'
 import {LaTeXCommander} from './components/commander'
 import {Logger} from './components/logger'
+import {FileSystem} from './components/fs'
 import {BuildInfo} from './components/buildinfo'
 import {Manager, BuildEvents} from './components/manager'
 import {Builder} from './components/builder'
@@ -305,6 +306,7 @@ export function activate(context: vscode.ExtensionContext) {
 export class Extension {
     packageInfo: { version?: string } = {}
     readonly extensionRoot: string
+    readonly fs: FileSystem
     readonly logger: Logger
     readonly buildInfo: BuildInfo
     readonly commander: Commander
@@ -335,6 +337,7 @@ export class Extension {
         // We must create an instance of Logger first to enable
         // adding log messages during initialization.
         this.logger = new Logger()
+        this.fs = new FileSystem(this)
         this.buildInfo = new BuildInfo(this)
         this.commander = new Commander(this)
         this.manager = new Manager(this)

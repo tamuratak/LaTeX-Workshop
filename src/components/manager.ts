@@ -424,7 +424,7 @@ export class Manager {
         return includedTeX
     }
 
-    private getDirtyContent(file: string, reload: boolean = false): string {
+    private async getDirtyContent(file: string, reload: boolean = false): Promise<string> {
         for (const cachedFile of Object.keys(this.cachedContent)) {
             if (reload) {
                 break
@@ -434,7 +434,7 @@ export class Manager {
             }
             return this.cachedContent[cachedFile].content
         }
-        const fileContent = utils.stripComments(fs.readFileSync(file).toString(), '%')
+        const fileContent = utils.stripComments((await this.extension.fs.readFile(file)).toString(), '%')
         this.cachedContent[file] = {content: fileContent, element: {}, children: [], bibs: []}
         return fileContent
     }
@@ -459,7 +459,7 @@ export class Manager {
      * @param file The path of a LaTeX file. It is added to the watcher if not being watched.
      * @param onChange If `true`, the content of `file` is read from the file system. If `false`, the cache of `file` is used.
      */
-    private parseFileAndSubs(file: string, onChange: boolean = false) {
+    private async parseFileAndSubs(file: string, onChange: boolean = false) {
         if (this.isExcluded(file)) {
             this.extension.logger.addLogMessage(`Ignoring: ${file}`)
             return
@@ -470,7 +470,7 @@ export class Manager {
             this.fileWatcher.add(file)
             this.filesWatched.push(file)
         }
-        const content = this.getDirtyContent(file, onChange)
+        const content = await this.getDirtyContent(file, onChange)
         this.cachedContent[file].children = []
         this.cachedContent[file].bibs = []
         this.cachedFullContent = undefined
@@ -786,12 +786,12 @@ export class Manager {
         }
     }
 
-    private onWatchedFileChanged(file: string) {
+    private async onWatchedFileChanged(file: string) {
         this.extension.logger.addLogMessage(`File watcher - file changed: ${file}`)
         // It is possible for either tex or non-tex files in the watcher.
         if (['.tex', '.bib'].concat(this.weaveExt).includes(path.extname(file)) &&
             !file.includes('expl3-code.tex')) {
-            this.parseFileAndSubs(file, true)
+            await this.parseFileAndSubs(file, true)
             this.updateCompleterOnChange(file)
         }
         this.buildOnFileChanged(file)

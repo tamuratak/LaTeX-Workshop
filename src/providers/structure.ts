@@ -32,9 +32,9 @@ export class SectionNodeProvider implements vscode.TreeDataProvider<Section> {
         this.showNumbers = configuration.get('view.outline.numbers.enabled') as boolean
     }
 
-    refresh(): Section[] {
+    async refresh(): Promise<Section[]> {
         if (this.extension.manager.rootFile) {
-            this.ds = this.buildModel(this.extension.manager.rootFile)
+            this.ds = await this.buildModel(this.extension.manager.rootFile)
             return this.ds
         } else {
             return []
@@ -45,7 +45,7 @@ export class SectionNodeProvider implements vscode.TreeDataProvider<Section> {
         this._onDidChangeTreeData.fire()
     }
 
-    buildModel(filePath: string, fileStack?: string[], parentStack?: Section[], parentChildren?: Section[], sectionNumber?: number[], imports: boolean = true): Section[] {
+    async buildModel(filePath: string, fileStack?: string[], parentStack?: Section[], parentChildren?: Section[], sectionNumber?: number[], imports: boolean = true): Promise<Section[]> {
 
         let rootStack: Section[] = []
         if (parentStack) {
@@ -78,7 +78,7 @@ export class SectionNodeProvider implements vscode.TreeDataProvider<Section> {
             return rootStack.length === 0
         }
 
-        let content = fs.readFileSync(filePath, 'utf-8')
+        let content = (await this.extension.fs.readFile(filePath)).toString()
         content = utils.stripCommentsAndVerbatim(content)
         const endPos = content.search(/\\end{document}/gm)
         if (endPos > -1) {

@@ -156,9 +156,9 @@ export class Viewer {
         return false
     }
 
-    private checkViewer(sourceFile: string, respectOutDir: boolean = true): string | undefined {
+    private async checkViewer(sourceFile: string, respectOutDir: boolean = true): Promise<string | undefined> {
         const pdfFile = this.extension.manager.tex2pdf(sourceFile, respectOutDir)
-        if (!fs.existsSync(pdfFile)) {
+        if (!await this.extension.fs.exists(pdfFile)) {
             this.extension.logger.addLogMessage(`Cannot find PDF file ${pdfFile}`)
             return
         }
@@ -177,8 +177,8 @@ export class Viewer {
      *
      * @param sourceFile The path of a LaTeX file.
      */
-    openBrowser(sourceFile: string) {
-        const url = this.checkViewer(sourceFile, true)
+    async openBrowser(sourceFile: string) {
+        const url = await this.checkViewer(sourceFile, true)
         if (!url) {
             return
         }
@@ -205,7 +205,7 @@ export class Viewer {
      * @param tabEditorGroup
      */
     async openTab(sourceFile: string, respectOutDir: boolean = true, tabEditorGroup: string) {
-        const url = this.checkViewer(sourceFile, respectOutDir)
+        const url = await this.checkViewer(sourceFile, respectOutDir)
         if (!url) {
             return
         }

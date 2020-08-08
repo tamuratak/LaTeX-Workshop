@@ -42,7 +42,7 @@ export class Server {
         this.extension.logger.addLogMessage('Creating LaTeX Workshop http and websocket server.')
     }
 
-    private handler(request: http.IncomingMessage, response: http.ServerResponse) {
+    private async handler(request: http.IncomingMessage, response: http.ServerResponse) {
         if (!request.url) {
             return
         }
@@ -57,7 +57,8 @@ export class Server {
             try {
                 const pdfSize = fs.statSync(fileName).size
                 response.writeHead(200, {'Content-Type': 'application/pdf', 'Content-Length': pdfSize})
-                fs.createReadStream(fileName).pipe(response)
+                const stream = await this.extension.fs.createReadStream(fileName)
+                stream.pipe(response)
                 this.extension.logger.addLogMessage(`Preview PDF file: ${fileName}`)
             } catch (e) {
                 this.extension.logger.addLogMessage(`Error reading PDF file: ${fileName}`)

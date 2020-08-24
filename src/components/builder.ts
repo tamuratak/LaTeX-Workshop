@@ -4,7 +4,11 @@ import * as fs from 'fs-extra'
 import * as cp from 'child_process'
 import * as cs from 'cross-spawn'
 import * as tmp from 'tmp'
-import * as pdfjsLib from 'pdfjs-dist'
+let pdfjsLib: any
+try {
+    // eslint-disable-next-line
+    pdfjsLib = require('pdfjs-dist')
+} catch {}
 import {Mutex} from '../lib/await-semaphore'
 import {replaceArgumentPlaceholders} from '../utils/utils'
 

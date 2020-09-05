@@ -13,13 +13,66 @@ import {encodePathWithPrefix} from '../utils/utils'
 import {ClientRequest, ServerResponse, PanelRequest, PdfViewerState} from '../../viewer/components/protocol'
 import {getCurrentThemeLightness} from '../utils/theme'
 
+class ClientSetObj {
+    readonly clients: {[key: string]: Set<Client>} = {}
+
+    constructor() {}
+
+    /**
+     * Returns the set of client instances of a PDF file.
+     * Returns `undefined` if the viewer have not recieved any request for the PDF file.
+     *
+     * @param pdfFilePath The path of a PDF file.
+     */
+    getClientSet(pdfFilePath: string): Set<Client> | undefined {
+        return this.clients[pdfFilePath.toLocaleUpperCase()]
+    }
+
+    createClientSet(pdfFilePath: string) {
+        const key = pdfFilePath.toLocaleUpperCase()
+        this.clients[key] = this.clients[key] || new Set()
+    }
+
+    add(client: Client) {
+        const set = this.getClientSet(client.pdfFilePath)
+        if (!set) {
+            return
+        }
+        set.add(client)
+        return set
+    }
+
+    delete(client: Client) {
+        const set = this.getClientSet(client.pdfFilePath)
+        if (!set) {
+            return
+        }
+        set.delete(client)
+        return set
+    }
+
+    find(websocket: ws) {
+        for( const set of Object.values(this.clients)) {
+            for ( const client of set ) {
+                if (client.websocket === websocket) {
+                    return client
+                }
+            }
+        }
+        return
+    }
+
+}
+
 class Client {
+    readonly pdfFilePath: string
     readonly viewer: 'browser' | 'tab'
     readonly websocket: ws
 
-    constructor(viewer: 'browser' | 'tab', websocket: ws) {
-        this.viewer = viewer
-        this.websocket = websocket
+    constructor(params: {viewer: 'browser' | 'tab', websocket: ws, pdfFilePath: string}) {
+        this.viewer = params.viewer
+        this.websocket = params.websocket
+        this.pdfFilePath = params.pdfFilePath
     }
 
     send(message: ServerResponse) {
@@ -87,7 +140,7 @@ class PdfViewerPanelSerializer implements vscode.WebviewPanelSerializer {
 export class Viewer {
     private readonly extension: Extension
     private readonly webviewPanels: Map<string, Set<PdfViewerPanel>> = new Map()
-    readonly clients: {[key: string]: Set<Client>} = {}
+    readonly clientSetObj = new ClientSetObj()
     readonly pdfViewerPanelSerializer: PdfViewerPanelSerializer
 
     constructor(extension: Extension) {
@@ -95,22 +148,20 @@ export class Viewer {
         this.pdfViewerPanelSerializer = new PdfViewerPanelSerializer(extension)
     }
 
+    get clients() {
+        return this.clientSetObj.clients
+    }
+
+    getClients(pdfFilePath: string) {
+        return this.clientSetObj.getClientSet(pdfFilePath)
+    }
+
     private createClients(pdfFilePath: string) {
         const key = pdfFilePath.toLocaleUpperCase()
-        this.clients[key] = this.clients[key] || new Set()
+        this.clientSetObj.createClientSet(key)
         if (!this.webviewPanels.has(key)) {
             this.webviewPanels.set(key, new Set())
         }
-    }
-
-    /**
-     * Returns the set of client instances of a PDF file.
-     * Returns `undefined` if the viewer have not recieved any request for the PDF file.
-     *
-     * @param pdfFilePath The path of a PDF file.
-     */
-    getClients(pdfFilePath: string): Set<Client> | undefined {
-        return this.clients[pdfFilePath.toLocaleUpperCase()]
     }
 
     private getPanelSet(pdfFilePath: string) {
@@ -127,15 +178,15 @@ export class Viewer {
      */
     refreshExistingViewer(sourceFile?: string, viewer?: string): boolean {
         if (!sourceFile) {
-            Object.keys(this.clients).forEach(key => {
-                this.clients[key].forEach(client => {
+            Object.values(this.clients).forEach((set) => {
+                set.forEach(client => {
                     client.send({type: 'refresh'})
                 })
             })
             return true
         }
         const pdfFile = this.extension.manager.tex2pdf(sourceFile, true)
-        const clients = this.getClients(pdfFile)
+        const clients = this.clientSetObj.getClientSet(pdfFile)
         if (clients !== undefined) {
             let refreshed = false
             // Check all viewer clients with the same path
@@ -401,54 +452,48 @@ export class Viewer {
         }
         switch (data.type) {
             case 'open': {
-                const clients = this.getClients(data.path)
-                if (clients === undefined) {
+                if (!this.clientSetObj.getClientSet(data.path)) {
                     return
                 }
-                const client = new Client(data.viewer, websocket)
-                clients.add( client )
+                const client = new Client({viewer: data.viewer, websocket, pdfFilePath: data.path})
+                this.clientSetObj.add(client)
                 websocket.on('close', () => {
-                    clients.delete(client)
+                    this.clientSetObj.delete(client)
                 })
                 break
             }
             case 'request_params': {
-                const clients = this.getClients(data.path)
-                if (!clients) {
+                const client = this.clientSetObj.find(websocket)
+                if (!client) {
                     break
                 }
-                for (const client of clients) {
-                    if (client.websocket !== websocket) {
-                        continue
+                const configuration = vscode.workspace.getConfiguration('latex-workshop')
+                const invertType = configuration.get('view.pdf.invertMode.enabled') as string
+                const invertEnabled = (invertType === 'auto' && (getCurrentThemeLightness() === 'dark')) ||
+                invertType === 'always' ||
+                (invertType === 'compat' && ((configuration.get('view.pdf.invert') as number) > 0))
+                const pack: ServerResponse = {
+                    type: 'params',
+                    scale: configuration.get('view.pdf.zoom') as string,
+                    trim: configuration.get('view.pdf.trim') as number,
+                    scrollMode: configuration.get('view.pdf.scrollMode') as number,
+                    spreadMode: configuration.get('view.pdf.spreadMode') as number,
+                    hand: configuration.get('view.pdf.hand') as boolean,
+                    invertMode: {
+                        enabled: invertEnabled,
+                        brightness: configuration.get('view.pdf.invertMode.brightness') as number,
+                        grayscale: configuration.get('view.pdf.invertMode.grayscale') as number,
+                        hueRotate: configuration.get('view.pdf.invertMode.hueRotate') as number,
+                        invert: configuration.get('view.pdf.invert') as number,
+                        sepia: configuration.get('view.pdf.invertMode.sepia') as number,
+                    },
+                    bgColor: configuration.get('view.pdf.backgroundColor') as string,
+                    keybindings: {
+                        synctex: configuration.get('view.pdf.internal.synctex.keybinding') as 'ctrl-click' | 'double-click'
                     }
-                    const configuration = vscode.workspace.getConfiguration('latex-workshop')
-                    const invertType = configuration.get('view.pdf.invertMode.enabled') as string
-                    const invertEnabled = (invertType === 'auto' && (getCurrentThemeLightness() === 'dark')) ||
-                        invertType === 'always' ||
-                        (invertType === 'compat' && ((configuration.get('view.pdf.invert') as number) > 0))
-                    const pack: ServerResponse = {
-                        type: 'params',
-                        scale: configuration.get('view.pdf.zoom') as string,
-                        trim: configuration.get('view.pdf.trim') as number,
-                        scrollMode: configuration.get('view.pdf.scrollMode') as number,
-                        spreadMode: configuration.get('view.pdf.spreadMode') as number,
-                        hand: configuration.get('view.pdf.hand') as boolean,
-                        invertMode: {
-                            enabled: invertEnabled,
-                            brightness: configuration.get('view.pdf.invertMode.brightness') as number,
-                            grayscale: configuration.get('view.pdf.invertMode.grayscale') as number,
-                            hueRotate: configuration.get('view.pdf.invertMode.hueRotate') as number,
-                            invert: configuration.get('view.pdf.invert') as number,
-                            sepia: configuration.get('view.pdf.invertMode.sepia') as number,
-                        },
-                        bgColor: configuration.get('view.pdf.backgroundColor') as string,
-                        keybindings: {
-                            synctex: configuration.get('view.pdf.internal.synctex.keybinding') as 'ctrl-click' | 'double-click'
-                        }
-                    }
-                    this.extension.logger.addLogMessage(`Sending the settings of the PDF viewer for initialization: ${JSON.stringify(pack)}`)
-                    client.send(pack)
                 }
+                this.extension.logger.addLogMessage(`Sending the settings of the PDF viewer for initialization: ${JSON.stringify(pack)}`)
+                client.send(pack)
                 break
             }
             case 'loaded': {
@@ -485,7 +530,7 @@ export class Viewer {
      * @param record The position to be revealed.
      */
     syncTeX(pdfFile: string, record: SyncTeXRecordForward) {
-        const clients = this.getClients(pdfFile)
+        const clients = this.clientSetObj.getClientSet(pdfFile)
         if (clients === undefined) {
             this.extension.logger.addLogMessage(`PDF is not viewed: ${pdfFile}`)
             return

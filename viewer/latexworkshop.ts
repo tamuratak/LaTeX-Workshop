@@ -431,13 +431,27 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
                     this.viewerHistory.forward()
                 }
             }
-        });
+        })
 
-        (document.getElementById('outerContainer') as HTMLElement).onmousemove = (e) => {
-            if (e.clientY <= 64) {
-                this.showToolbar(true)
+        this.onDidStartPdfViewer(() => {
+            const toolbar = document.getElementsByClassName('toolbar')[0] as HTMLElement
+            toolbar.className = 'toolbar hide'
+            toolbar.onmouseenter = () => {
+              if (this.hideToolbarInterval) {
+                clearInterval(this.hideToolbarInterval)
+              }
+              toolbar.className = 'toolbar'
             }
-        }
+            toolbar.onmouseleave = () => {
+              this.hideToolbarInterval = setInterval(() => {
+                if(!PDFViewerApplication.findBar.opened && !PDFViewerApplication.pdfSidebar.isOpen &&
+                  !PDFViewerApplication.secondaryToolbar.isOpen) {
+                    toolbar.className = 'toolbar hide'
+                }
+              }, 3000)
+            }
+        })
+
     }
 
     private startConnectionKeeper() {

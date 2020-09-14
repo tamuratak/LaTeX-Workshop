@@ -71,7 +71,7 @@ html #outerContainer.sidebarOpen > #sidebarContainer {
 }
 
 .toolbar.hide {
-    top: -32px;
+    opacity: 0;
 }
 
 .toolbar.hide:hover {

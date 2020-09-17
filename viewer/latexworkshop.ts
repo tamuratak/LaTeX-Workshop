@@ -77,6 +77,7 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
 
         this.hidePrintButton()
         this.registerKeybinding()
+        this.registerToolbarView()
         this.startConnectionKeeper()
         this.startRebroadcastingKeyboardEvent()
         this.startSendingState()
@@ -323,21 +324,6 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
         }
     }
 
-    private showToolbar(animate: boolean) {
-        if (this.hideToolbarInterval) {
-            clearInterval(this.hideToolbarInterval)
-        }
-        const d = document.getElementsByClassName('toolbar')[0]
-        d.className = d.className.replace(' hide', '') + (animate ? '' : ' notransition')
-
-        this.hideToolbarInterval = setInterval(() => {
-            if(!PDFViewerApplication.findBar.opened && !PDFViewerApplication.pdfSidebar.isOpen && !PDFViewerApplication.secondaryToolbar.isOpen) {
-                d.className = d.className.replace(' notransition', '') + ' hide'
-                clearInterval(this.hideToolbarInterval)
-            }
-        }, 3000)
-    }
-
     // Since the width of the selector of scaling depends on each locale,
     // we have to set its `max-width` dynamically on initialization.
     private setCssRule() {
@@ -433,9 +419,11 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
             }
         })
 
+    }
+
+    private registerToolbarView() {
         this.onDidStartPdfViewer(() => {
             const toolbar = document.getElementsByClassName('toolbar')[0] as HTMLElement
-            toolbar.className = 'toolbar hide'
             toolbar.onmouseenter = () => {
               if (this.hideToolbarInterval) {
                 clearInterval(this.hideToolbarInterval)
@@ -451,7 +439,11 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
               }, 3000)
             }
         })
+    }
 
+    private showToolbar(animate: boolean) {
+        const d = document.getElementsByClassName('toolbar')[0]
+        d.className = 'toolbar' + (animate ? '' : ' notransition')
     }
 
     private startConnectionKeeper() {

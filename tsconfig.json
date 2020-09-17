@@ -15,6 +15,7 @@
         "noUnusedParameters": true,
         "outDir": "out",
         "rootDir": ".",
+        "skipLibCheck": true,
         "sourceMap": true,
         "strictBindCallApply": true,
         "strictFunctionTypes": true,
@@ -23,7 +24,6 @@
         "target": "es2017",
         "baseUrl": "./",
         "paths": {
-            "pdfjs-dist": ["types/pdfjs-dist"],
             "mathjax-node": ["types/mathjax-node"]
         },
         "typeRoots": ["./types", "./node_modules/@types"]

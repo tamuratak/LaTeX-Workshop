@@ -300,19 +300,16 @@ export class Commander {
         this.extension.logger.showLog()
     }
 
-    gotoSection(filePath: string, lineNumber: number) {
+    async gotoSection(filePath: string, lineNumber: number) {
         this.extension.logger.addLogMessage(`GOTOSECTION command invoked. Target ${filePath}, line ${lineNumber}`)
         const activeEditor = vscode.window.activeTextEditor
 
-        vscode.workspace.openTextDocument(filePath).then((doc) => {
-            vscode.window.showTextDocument(doc).then(() => {
-                vscode.commands.executeCommand('revealLine', {lineNumber, at: 'center'})
-                if (activeEditor) {
-                    activeEditor.selection = new vscode.Selection(new vscode.Position(lineNumber, 0), new vscode.Position(lineNumber, 0))
-                }
-            })
-        })
-
+        const doc = await vscode.workspace.openTextDocument(filePath)
+        await vscode.window.showTextDocument(doc)
+        await vscode.commands.executeCommand('revealLine', {lineNumber, at: 'center'})
+        if (activeEditor) {
+            activeEditor.selection = new vscode.Selection(new vscode.Position(lineNumber, 0), new vscode.Position(lineNumber, 0))
+        }
     }
 
     setViewer() {
@@ -461,12 +458,10 @@ export class Commander {
                 itemString += '\\item '
                 newCursorPos = cursorPos.with(line.lineNumber + 1, itemString.length)
             }
-            return editor.edit(editBuilder => {
-                editBuilder.insert(cursorPos, '\n' + itemString)
-                }).then(() => {
-                    editor.selection = new vscode.Selection(newCursorPos, newCursorPos)
-                }
-            ).then(() => { editor.revealRange(editor.selection) })
+            return editor
+            .edit(editBuilder => { editBuilder.insert(cursorPos, '\n' + itemString) })
+            .then(() => { editor.selection = new vscode.Selection(newCursorPos, newCursorPos) })
+            .then(() => { editor.revealRange(editor.selection) })
         }
         return editor.edit(() => {
             vscode.commands.executeCommand('type', { source: 'keyboard', text: '\n' })

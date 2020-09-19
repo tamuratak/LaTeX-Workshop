@@ -67,11 +67,12 @@ html #outerContainer.sidebarOpen > #sidebarContainer {
 .toolbar {
     position: absolute;
     top: 0;
-    transition: all 0.4s cubic-bezier(.23,.96,.57,.99);
+    transition: all 0.2s cubic-bezier(.23,.96,.57,.99);
 }
 
 .toolbar.hide {
     opacity: 0;
+    transition-duration: 0.4s;
 }
 
 .toolbar.hide:hover {

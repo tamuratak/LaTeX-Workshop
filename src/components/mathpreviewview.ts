@@ -4,7 +4,7 @@ import {MathPreview, TexMathEnv} from '../providers/preview/mathpreview'
 import {Extension} from '../main'
 
 
-export class MathPreviewPanel {
+export class MathPreviewView {
     extension: Extension
     mathPreview: MathPreview
     panel?: vscode.WebviewPanel
@@ -34,7 +34,7 @@ export class MathPreviewPanel {
             this.clearCache()
             this.panel = undefined
         })
-        const jsPath = vscode.Uri.file(path.join(this.extension.extensionRoot, './resources/mathpreviewpanel/mathpreview.js'))
+        const jsPath = vscode.Uri.file(path.join(this.extension.extensionRoot, './resources/mathpreviewview/mathpreview.js'))
         const jsPathSrc = panel.webview.asWebviewUri(jsPath)
         panel.webview.html = this.getHtml(jsPathSrc)
         this.panel = panel

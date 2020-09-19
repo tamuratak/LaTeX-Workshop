@@ -633,6 +633,6 @@ export class Commander {
     }
 
     openMathPreviewPanel() {
-        this.extension.mathPreviewPanel.open()
+        this.extension.mathPreviewView.open()
     }
 }

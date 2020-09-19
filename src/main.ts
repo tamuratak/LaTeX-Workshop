@@ -26,7 +26,7 @@ import {CodeActions} from './providers/codeactions'
 import {HoverProvider} from './providers/hover'
 import {GraphicsPreview} from './providers/preview/graphicspreview'
 import {MathPreview} from './providers/preview/mathpreview'
-import {MathPreviewPanel} from './components/mathpreviewpanel'
+import {MathPreviewView} from './components/mathpreviewview'
 import {DocSymbolProvider} from './providers/docsymbol'
 import {ProjectSymbolProvider} from './providers/projectsymbol'
 import {SectionNodeProvider, StructureTreeView} from './providers/structure'
@@ -195,10 +195,10 @@ export function activate(context: vscode.ExtensionContext) {
     }))
 
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument( () => {
-        extension.mathPreviewPanel.update()
+        extension.mathPreviewView.update()
     }))
     context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection( () => {
-        extension.mathPreviewPanel.update()
+        extension.mathPreviewView.update()
     }))
 
     let isLaTeXActive = false
@@ -344,7 +344,7 @@ export class Extension {
     readonly graphicsPreview: GraphicsPreview
     readonly mathPreview: MathPreview
     readonly bibtexFormatter: BibtexFormatter
-    readonly mathPreviewPanel: MathPreviewPanel
+    readonly mathPreviewView: MathPreviewView
 
     constructor() {
         this.extensionRoot = path.resolve(`${__dirname}/../../`)
@@ -375,7 +375,7 @@ export class Extension {
         this.graphicsPreview = new GraphicsPreview(this)
         this.mathPreview = new MathPreview(this)
         this.bibtexFormatter = new BibtexFormatter(this)
-        this.mathPreviewPanel = new MathPreviewPanel(this)
+        this.mathPreviewView = new MathPreviewView(this)
         this.logger.addLogMessage('LaTeX Workshop initialized.')
     }
 }

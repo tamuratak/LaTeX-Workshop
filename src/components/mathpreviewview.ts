@@ -4,10 +4,10 @@ import {MathPreview, TexMathEnv} from '../providers/preview/mathpreview'
 import {Extension} from '../main'
 
 
-export class MathPreviewView {
+export class MathPreviewViewProvider implements vscode.WebviewViewProvider {
     extension: Extension
     mathPreview: MathPreview
-    panel?: vscode.WebviewPanel
+    view: vscode.WebviewView | undefined
     prevDocumentUri?: string
     prevCursorPosition?: vscode.Position
     prevNewCommands?: string
@@ -17,33 +17,35 @@ export class MathPreviewView {
         this.mathPreview = extension.mathPreview
     }
 
-    open() {
-        if (this.panel) {
-            if (!this.panel.visible) {
-                this.panel.reveal(undefined, true)
-            }
-            return
+    resolveWebviewView(webviewView: vscode.WebviewView) {
+        this.view = webviewView
+        webviewView.webview.options = {
+            enableScripts: true
         }
+        webviewView.onDidDispose(() => {
+            this.close()
+        })
+        const jsPath = vscode.Uri.file(path.join(this.extension.extensionRoot, './resources/mathpreviewview/mathpreview.js'))
+        const jsPathSrc = webviewView.webview.asWebviewUri(jsPath)
+        webviewView.webview.html = this.getHtml(jsPathSrc)
+        webviewView.webview.onDidReceiveMessage(() => this.update())
+    }
+
+    open() {
         const panel = vscode.window.createWebviewPanel(
             'latex-workshop-mathpreview',
             'Math Preview',
             { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
             { enableScripts: true, retainContextWhenHidden: true }
         )
-        panel.onDidDispose(() => {
-            this.clearCache()
-            this.panel = undefined
-        })
         const jsPath = vscode.Uri.file(path.join(this.extension.extensionRoot, './resources/mathpreviewview/mathpreview.js'))
         const jsPathSrc = panel.webview.asWebviewUri(jsPath)
         panel.webview.html = this.getHtml(jsPathSrc)
-        this.panel = panel
         panel.webview.onDidReceiveMessage(() => this.update())
     }
 
     close() {
-        this.panel?.dispose()
-        this.panel = undefined
+        this.view = undefined
         this.clearCache()
     }
 
@@ -75,14 +77,14 @@ export class MathPreviewView {
             </style>
             <script src='${jsPathSrc}' defer></script>
         </head>
-        <body>
+        <body> 
             <div id="mathBlock"><img src="" id="math" /></div>
         </body>
         </html>`
     }
 
     async update() {
-        if (!this.panel || !this.panel.visible) {
+        if (!this.view || !this.view.visible) {
             return
         }
         const editor = vscode.window.activeTextEditor
@@ -106,7 +108,7 @@ export class MathPreviewView {
         this.prevDocumentUri = documentUri
         this.prevNewCommands = newCommands
         this.prevCursorPosition = position
-        return this.panel.webview.postMessage({type: 'mathImage', src: svgDataUrl })
+        return this.view.webview.postMessage({type: 'mathImage', src: svgDataUrl })
     }
 
     getTexMath(document: vscode.TextDocument, position: vscode.Position) {

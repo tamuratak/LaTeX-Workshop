@@ -26,7 +26,7 @@ import {CodeActions} from './providers/codeactions'
 import {HoverProvider} from './providers/hover'
 import {GraphicsPreview} from './providers/preview/graphicspreview'
 import {MathPreview} from './providers/preview/mathpreview'
-import {MathPreviewView} from './components/mathpreviewview'
+import {MathPreviewViewProvider} from './components/mathpreviewview'
 import {DocSymbolProvider} from './providers/docsymbol'
 import {ProjectSymbolProvider} from './providers/projectsymbol'
 import {SectionNodeProvider, StructureTreeView} from './providers/structure'
@@ -257,6 +257,10 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerCodeActionsProvider(latexSelector, extension.codeActions))
     context.subscriptions.push(vscode.languages.registerFoldingRangeProvider(latexSelector, new FoldingProvider(extension)))
 
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider('latex-mathpreview-view', extension.mathPreviewView, {webviewOptions: {retainContextWhenHidden: true}})
+    )
+
     extension.manager.findRoot()
     extension.linter.lintRootFileIfEnabled()
     obsoleteConfigCheck(extension)
@@ -344,7 +348,7 @@ export class Extension {
     readonly graphicsPreview: GraphicsPreview
     readonly mathPreview: MathPreview
     readonly bibtexFormatter: BibtexFormatter
-    readonly mathPreviewView: MathPreviewView
+    readonly mathPreviewView: MathPreviewViewProvider
 
     constructor() {
         this.extensionRoot = path.resolve(`${__dirname}/../../`)
@@ -375,7 +379,7 @@ export class Extension {
         this.graphicsPreview = new GraphicsPreview(this)
         this.mathPreview = new MathPreview(this)
         this.bibtexFormatter = new BibtexFormatter(this)
-        this.mathPreviewView = new MathPreviewView(this)
+        this.mathPreviewView = new MathPreviewViewProvider(this)
         this.logger.addLogMessage('LaTeX Workshop initialized.')
     }
 }

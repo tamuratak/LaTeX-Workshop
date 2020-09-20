@@ -11,8 +11,9 @@
     "type": "git",
     "url": "https://github.com/James-Yu/LaTeX-Workshop.git"
   },
+  "enableProposedApi": true,
   "engines": {
-    "vscode": "^1.42.0"
+    "vscode": "^1.49.0"
   },
   "categories": [
     "Programming Languages",
@@ -1944,6 +1945,13 @@
           "title": "LaTeX",
           "icon": "./icons/activity-bar.svg"
         }
+      ],
+      "panel": [
+        {
+          "id": "latex-workshop-panel",
+          "title": "LaTeX",
+          "icon": "./icons/activity-bar.svg"
+        }
       ]
     },
     "views": {
@@ -1956,6 +1964,14 @@
         {
           "id": "latex-structure",
           "name": "Structure",
+          "when": "latex-workshop:enabled"
+        }
+      ],
+      "latex-workshop-panel": [
+        {
+          "id": "latex-mathpreview-view",
+          "type": "webview",
+          "name": "Math Preview",
           "when": "latex-workshop:enabled"
         }
       ]
@@ -2003,7 +2019,7 @@
     "@types/mocha": "^7.0.2",
     "@types/node": "^12.12.17",
     "@types/tmp": "^0.2.0",
-    "@types/vscode": "1.42.0",
+    "@types/vscode": "1.49.0",
     "@types/workerpool": "^6.0.0",
     "@types/ws": "^5.1.1",
     "@typescript-eslint/eslint-plugin": "^4.1.1",

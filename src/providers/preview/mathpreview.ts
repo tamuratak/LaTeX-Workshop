@@ -9,9 +9,11 @@ import {getCurrentThemeLightness} from '../../utils/theme'
 
 import {NewCommandFinder} from './mathpreviewlib/newcommandfinder'
 import {TexMathEnv, TeXMathEnvFinder} from './mathpreviewlib/texmathenvfinder'
-export {TexMathEnv} from './mathpreviewlib/texmathenvfinder'
 import {HoverPreviewOnRefProvider} from './mathpreviewlib/hoverpreviewonref'
 import * as mputils from './mathpreviewlib/mathpreviewutils'
+
+export {TexMathEnv} from './mathpreviewlib/texmathenvfinder'
+
 
 export class MathPreview {
     private readonly extension: Extension

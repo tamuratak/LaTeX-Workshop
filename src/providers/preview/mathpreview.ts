@@ -7,6 +7,7 @@ import {Extension} from '../../main'
 import {Suggestion as ReferenceEntry} from '../completer/reference'
 import {getCurrentThemeLightness} from '../../utils/theme'
 
+import {CursorRenderer} from './mathpreviewlib/cursorrenderer'
 import {NewCommandFinder} from './mathpreviewlib/newcommandfinder'
 import {TexMathEnv, TeXMathEnvFinder} from './mathpreviewlib/texmathenvfinder'
 import {HoverPreviewOnRefProvider} from './mathpreviewlib/hoverpreviewonref'
@@ -19,6 +20,7 @@ export class MathPreview {
     private readonly extension: Extension
     private color: string = '#000000'
     private readonly mj: MathJaxPool
+    private readonly cursorRenderer: CursorRenderer
     private readonly newCommandFinder: NewCommandFinder
     private readonly texMathEnvFinder: TeXMathEnvFinder
     private readonly hoverPreviewOnRefProvider: HoverPreviewOnRefProvider
@@ -27,6 +29,7 @@ export class MathPreview {
         this.extension = extension
         this.mj = new MathJaxPool()
         vscode.workspace.onDidChangeConfiguration(() => this.getColor())
+        this.cursorRenderer = new CursorRenderer()
         this.newCommandFinder = new NewCommandFinder(extension)
         this.texMathEnvFinder = new TeXMathEnvFinder()
         this.hoverPreviewOnRefProvider = new HoverPreviewOnRefProvider(extension, this.mj)
@@ -39,7 +42,7 @@ export class MathPreview {
     async provideHoverOnTex(document: vscode.TextDocument, tex: TexMathEnv, newCommand: string): Promise<vscode.Hover> {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const scale = configuration.get('hover.preview.scale') as number
-        let s = this.renderCursor(document, tex.range)
+        let s = this.cursorRenderer.renderCursor(document, tex.range, this.color)
         s = mputils.mathjaxify(s, tex.envname)
         const typesetArg: TypesetArg = {
             math: newCommand + mputils.stripTeX(s),
@@ -117,38 +120,8 @@ export class MathPreview {
         }
     }
 
-    // Test whether cursor is in tex command strings
-    // like \begin{...} \end{...} \xxxx{ \[ \] \( \) or \\
-    private isCursorInTeXCommand(document: vscode.TextDocument): boolean {
-        const editor = vscode.window.activeTextEditor
-        if (!editor) {
-            return false
-        }
-        const cursor = editor.selection.active
-        const r = document.getWordRangeAtPosition(cursor, /\\(?:begin|end|label)\{.*?\}|\\[a-zA-Z]+\{?|\\[()[\]]|\\\\/)
-        if (r && r.start.isBefore(cursor) && r.end.isAfter(cursor) ) {
-            return true
-        }
-        return false
-    }
-
     renderCursor(document: vscode.TextDocument, range: vscode.Range): string {
-        const editor = vscode.window.activeTextEditor
-        const configuration = vscode.workspace.getConfiguration('latex-workshop')
-        const conf = configuration.get('hover.preview.cursor.enabled') as boolean
-        if (editor && conf && !this.isCursorInTeXCommand(document)) {
-            const cursor = editor.selection.active
-            const symbol = configuration.get('hover.preview.cursor.symbol') as string
-            const color = configuration.get('hover.preview.cursor.color') as string
-            let sym = `{\\color{${this.color}}${symbol}}`
-            if (color !== 'auto') {
-                sym = `{\\color{${color}}${symbol}}`
-            }
-            if (range.contains(cursor) && !range.start.isEqual(cursor) && !range.end.isEqual(cursor)) {
-                return document.getText( new vscode.Range(range.start, cursor) ) + sym + document.getText( new vscode.Range(cursor, range.end))
-            }
-        }
-        return document.getText(range)
+        return this.cursorRenderer.renderCursor(document, range, this.color)
     }
 
     findHoverOnTex(document: vscode.TextDocument | TextDocumentLike, position: vscode.Position): TexMathEnv | undefined {

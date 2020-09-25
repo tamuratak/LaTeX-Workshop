@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
 import * as utils from '../../../utils/utils'
-import {TextDocumentLike} from '../../../components/textdocumentlike'
+import {TextDocumentLike} from './textdocumentlike'
 import {Suggestion as ReferenceEntry} from '../../completer/reference'
 
 export type TexMathEnv = { texString: string, range: vscode.Range, envname: string }

@@ -2,12 +2,12 @@ import * as vscode from 'vscode'
 
 import {MathJaxPool, TypesetArg} from './mathjaxpool'
 import * as utils from '../../utils/utils'
-import {TextDocumentLike} from '../../components/textdocumentlike'
 import {Extension} from '../../main'
 import {Suggestion as ReferenceEntry} from '../completer/reference'
 import {getCurrentThemeLightness} from '../../utils/theme'
 
 import {CursorRenderer} from './mathpreviewlib/cursorrenderer'
+import {TextDocumentLike} from './mathpreviewlib/textdocumentlike'
 import {NewCommandFinder} from './mathpreviewlib/newcommandfinder'
 import {TexMathEnv, TeXMathEnvFinder} from './mathpreviewlib/texmathenvfinder'
 import {HoverPreviewOnRefProvider} from './mathpreviewlib/hoverpreviewonref'

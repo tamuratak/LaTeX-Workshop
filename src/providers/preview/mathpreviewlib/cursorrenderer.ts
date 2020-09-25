@@ -1,3 +1,4 @@
+import {latexParser} from 'latex-utensils'
 import * as vscode from 'vscode'
 import type {Extension} from '../../../main'
 import {TexMathEnv} from './texmathenvfinder'
@@ -5,6 +6,7 @@ import {TexMathEnv} from './texmathenvfinder'
 
 export class CursorRenderer {
     private readonly extension: Extension
+    prevAst?: latexParser.LatexAst
 
     constructor(extension: Extension) {
         this.extension = extension
@@ -33,13 +35,19 @@ export class CursorRenderer {
         return arry.join('\n')
     }
 
-    renderCursor(document: vscode.TextDocument, texMath: TexMathEnv, thisColor: string): string {
+    async renderCursor(document: vscode.TextDocument, texMath: TexMathEnv, thisColor: string): Promise<string> {
         const range = texMath.range
-        const cursor = vscode.window.activeTextEditor?.selection.active
-        if (!cursor || !range.contains(cursor) || range.start.isEqual(cursor) || range.end.isEqual(cursor)) {
+        const cursorPos = vscode.window.activeTextEditor?.selection.active
+        if (!cursorPos || !range.contains(cursorPos) || range.start.isEqual(cursorPos) || range.end.isEqual(cursorPos)) {
             return texMath.texString
         }
-        this.extension.pegParser.parseLatex(texMath.texString).then(s => console.log(JSON.stringify(s)))
+        const ast = await this.extension.pegParser.parseLatex(texMath.texString)
+        if (!ast) {
+            return texMath.texString
+        }
+        const cursorPosInSnippet = { line: cursorPos.line - range.start.line + 1, column: cursorPos.character + 1 }
+        const result = latexParser.findNodeAt(ast.content, cursorPosInSnippet)
+        console.log(JSON.stringify(result))
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const conf = configuration.get('hover.preview.cursor.enabled') as boolean
         if (!conf || this.isCursorInTeXCommand(document)) {
@@ -47,8 +55,8 @@ export class CursorRenderer {
         }
         const symbol = configuration.get('hover.preview.cursor.symbol') as string
         const color = configuration.get('hover.preview.cursor.color') as string
-        const sym = color === 'auto' ? `{\\color{${thisColor}}${symbol}}` : `{\\color{${color}}${symbol}}`
-        return this.insertCursor(texMath, cursor, sym)
+        const cursorString = color === 'auto' ? `{\\color{${thisColor}}${symbol}}` : `{\\color{${color}}${symbol}}`
+        return this.insertCursor(texMath, cursorPos, cursorString)
     }
 
 }

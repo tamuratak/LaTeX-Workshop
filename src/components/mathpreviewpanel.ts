@@ -197,8 +197,8 @@ export class MathPreviewPanel {
         return
     }
 
-    renderCursor(document: vscode.TextDocument, tex: TexMathEnv) {
-        const s = this.mathPreview.renderCursor(document, tex)
+    async renderCursor(document: vscode.TextDocument, tex: TexMathEnv) {
+        const s = await this.mathPreview.renderCursor(document, tex)
         tex.texString = s
     }
 

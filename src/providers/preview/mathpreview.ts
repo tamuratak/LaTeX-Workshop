@@ -45,7 +45,7 @@ export class MathPreview {
     async provideHoverOnTex(document: vscode.TextDocument, tex: TexMathEnv, newCommand: string): Promise<vscode.Hover> {
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const scale = configuration.get('hover.preview.scale') as number
-        let s = this.cursorRenderer.renderCursor(document, tex, this.color)
+        let s = await this.cursorRenderer.renderCursor(document, tex, this.color)
         s = this.mputils.mathjaxify(s, tex.envname)
         const typesetArg: TypesetArg = {
             math: newCommand + this.mputils.stripTeX(s),
@@ -123,7 +123,7 @@ export class MathPreview {
         }
     }
 
-    renderCursor(document: vscode.TextDocument, texMath: TexMathEnv): string {
+    renderCursor(document: vscode.TextDocument, texMath: TexMathEnv): Promise<string> {
         return this.cursorRenderer.renderCursor(document, texMath, this.color)
     }
 

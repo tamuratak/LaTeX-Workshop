@@ -1,9 +1,9 @@
 import * as vscode from 'vscode'
 import * as utils from '../../../utils/utils'
 import {MathJaxPool, TypesetArg} from '../mathjaxpool'
-import {Suggestion as ReferenceEntry} from '../../completer/reference'
-import {Extension} from '../../../main'
-import {TexMathEnv} from './texmathenvfinder'
+import type {Suggestion as ReferenceEntry} from '../../completer/reference'
+import type {Extension} from '../../../main'
+import type {TexMathEnv} from './texmathenvfinder'
 import * as mputils from './mathpreviewutils'
 
 export class HoverPreviewOnRefProvider {

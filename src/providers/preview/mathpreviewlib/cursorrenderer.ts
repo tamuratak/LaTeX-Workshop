@@ -27,12 +27,43 @@ export class CursorRenderer {
         return false
     }
 
-    insertCursor(texMath: TexMathEnv, cursorPos: vscode.Position, cursor: string) {
-        const arry = texMath.texString.split('\n')
+    cursorPosInSnippet(texMath: TexMathEnv, cursorPos: vscode.Position) {
         const line = cursorPos.line - texMath.range.start.line
-        const curLine = arry[line]
-        arry[line] = curLine.substring(0, cursorPos.character) + cursor + curLine.substring(cursorPos.character, curLine.length)
-        return arry.join('\n')
+        const character = line === 0 ? cursorPos.character - texMath.range.start.character : cursorPos.character
+        return {line, character}
+    }
+
+    async insertCursor(texMath: TexMathEnv, cursorPos: vscode.Position, cursor: string) {
+        const cursorPosInSnippet = this.cursorPosInSnippet(texMath, cursorPos)
+        const arry = texMath.texString.split('\n')
+        const cursorNode = await this.nodeAt(texMath, cursorPos)
+        if (!cursorNode || !cursorNode.location) {
+            const {line, character} = this.cursorPosInSnippet(texMath, cursorPos)
+            const curLine = arry[line]
+            arry[line] = curLine.substring(0, character) + cursor + curLine.substring(character, curLine.length)
+            return arry.join('\n')
+        }
+        const nodeStart = { line: cursorNode.location.start.line - 1, character: cursorNode.location.start.column - 1 }
+        const nodeEnd = { line: cursorNode.location.end.line - 1, character: cursorNode.location.end.column - 1 }
+        if (nodeStart.line === cursorPosInSnippet.line && cursorPosInSnippet.line === nodeEnd.line) {
+            const line = cursorPosInSnippet.line
+            const curLine = arry[line]
+            arry[line] =
+            curLine.substring(0, nodeStart.character+1)
+            + '{'
+            + curLine.substring(nodeStart.character+1, cursorPosInSnippet.character)
+            + cursor
+            + curLine.substring(cursorPosInSnippet.character, nodeEnd.character-1)
+            + '}'
+            + curLine.substring(nodeEnd.character, curLine.length)
+            return arry.join('\n')
+        } else if (nodeStart.line === cursorPos.line) {
+            return texMath.texString
+        } else if (nodeEnd.line === cursorPos.line) {
+            return texMath.texString
+        } else {
+            return texMath.texString
+        }
     }
 
     async nodeAt(texMath: TexMathEnv, cursorPos: vscode.Position) {
@@ -40,8 +71,9 @@ export class CursorRenderer {
         if (!ast) {
             return
         }
-        const cursorPosInSnippet = { line: cursorPos.line - texMath.range.start.line + 1, column: cursorPos.character + 1 }
-        const result = latexParser.findNodeAt(ast.content, cursorPosInSnippet)
+        const cursorPosInSnippet = this.cursorPosInSnippet(texMath, cursorPos)
+        const cursorLocInSnippet = {line: cursorPosInSnippet.line + 1, column: cursorPosInSnippet.character + 1}
+        const result = latexParser.findNodeAt(ast.content, cursorLocInSnippet)
         if (!result) {
             return
         }

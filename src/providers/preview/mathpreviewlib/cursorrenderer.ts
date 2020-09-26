@@ -27,12 +27,26 @@ export class CursorRenderer {
         return false
     }
 
-    insertCursor(texMath: TexMathEnv, pos: vscode.Position, cursor: string) {
+    insertCursor(texMath: TexMathEnv, cursorPos: vscode.Position, cursor: string) {
         const arry = texMath.texString.split('\n')
-        const line = pos.line - texMath.range.start.line
+        const line = cursorPos.line - texMath.range.start.line
         const curLine = arry[line]
-        arry[line] = curLine.substring(0, pos.character) + cursor + curLine.substring(pos.character, curLine.length)
+        arry[line] = curLine.substring(0, cursorPos.character) + cursor + curLine.substring(cursorPos.character, curLine.length)
         return arry.join('\n')
+    }
+
+    async nodeAt(texMath: TexMathEnv, cursorPos: vscode.Position) {
+        const ast = await this.extension.pegParser.parseLatex(texMath.texString)
+        if (!ast) {
+            return
+        }
+        const cursorPosInSnippet = { line: cursorPos.line - texMath.range.start.line + 1, column: cursorPos.character + 1 }
+        const result = latexParser.findNodeAt(ast.content, cursorPosInSnippet)
+        if (!result) {
+            return
+        }
+        console.log(JSON.stringify(result.node))
+        return result.node
     }
 
     async renderCursor(document: vscode.TextDocument, texMath: TexMathEnv, thisColor: string): Promise<string> {
@@ -41,13 +55,6 @@ export class CursorRenderer {
         if (!cursorPos || !range.contains(cursorPos) || range.start.isEqual(cursorPos) || range.end.isEqual(cursorPos)) {
             return texMath.texString
         }
-        const ast = await this.extension.pegParser.parseLatex(texMath.texString)
-        if (!ast) {
-            return texMath.texString
-        }
-        const cursorPosInSnippet = { line: cursorPos.line - range.start.line + 1, column: cursorPos.character + 1 }
-        const result = latexParser.findNodeAt(ast.content, cursorPosInSnippet)
-        console.log(JSON.stringify(result))
         const configuration = vscode.workspace.getConfiguration('latex-workshop')
         const conf = configuration.get('hover.preview.cursor.enabled') as boolean
         if (!conf || this.isCursorInTeXCommand(document)) {

@@ -148,9 +148,10 @@ export class MathPreviewPanel {
         }
         if (ev?.type === 'edit') {
             this.prevEditTime = Date.now()
+            return
         } else if (ev?.type === 'selection') {
             if (Date.now() - this.prevEditTime < 100) {
-                return
+//                return
             }
         }
         const editor = vscode.window.activeTextEditor
@@ -160,9 +161,9 @@ export class MathPreviewPanel {
             return
         }
         const documentUri = document.uri.toString()
-        if (ev?.type === 'edit' && documentUri !== ev.event.document.uri.toString()) {
+/*        if (ev?.type === 'edit' && documentUri !== ev.event.document.uri.toString()) {
             return
-        }
+        } */
         const position = editor.selection.active
         const texMath = this.getTexMath(document, position)
         if (!texMath) {
@@ -173,6 +174,7 @@ export class MathPreviewPanel {
         if ( position.line === this.prevCursorPosition?.line && documentUri === this.prevDocumentUri ) {
             cachedCommands = this.prevNewCommands
         }
+        await this.renderCursor(document, texMath)
         const result = await this.mathPreview.generateSVG(document, texMath, cachedCommands).catch(() => undefined)
         if (!result) {
             return
@@ -186,7 +188,6 @@ export class MathPreviewPanel {
     private getTexMath(document: vscode.TextDocument, position: vscode.Position) {
         const texMath = this.mathPreview.findMathEnvIncludingPosition(document, position)
         if (texMath) {
-            // this.renderCursor(document, texMath)
             if (texMath.envname !== '$') {
                 return texMath
             }

@@ -15,7 +15,7 @@ export class CursorRenderer {
 
     // Test whether cursor is in tex command strings
     // like \begin{...} \end{...} \xxxx{ \[ \] \( \) or \\
-    private isCursorInTeXCommand(document: vscode.TextDocument): boolean {
+    isCursorInTeXCommand(document: vscode.TextDocument): boolean {
         const editor = vscode.window.activeTextEditor
         if (!editor) {
             return false
@@ -69,7 +69,7 @@ export class CursorRenderer {
         }
         const nodeStart = se.start
         const nodeEnd = se.end
-        console.log(JSON.stringify([nodeStart, nodeEnd, texMath.texString]))
+        console.log(JSON.stringify([nodeStart, nodeEnd, cursorNode, texMath.texString]))
         if (nodeStart.line === cursorPosInSnippet.line && cursorPosInSnippet.line === nodeEnd.line) {
             const line = cursorPosInSnippet.line
             const curLine = arry[line]
@@ -81,14 +81,19 @@ export class CursorRenderer {
             + curLine.substring(cursorPosInSnippet.character, nodeEnd.character)
             + '}'
             + curLine.substring(nodeEnd.character, curLine.length)
-            return arry.join('\n')
         } else if (nodeStart.line === cursorPos.line) {
             return texMath.texString
         } else if (nodeEnd.line === cursorPos.line) {
             return texMath.texString
         } else {
-            return texMath.texString
+            const line = cursorPosInSnippet.line
+            const curLine = arry[line]
+            arry[line] =
+            curLine.substring(0, cursorPosInSnippet.character)
+            + cursor
+            + curLine.substring(cursorPosInSnippet.character, curLine.length)
         }
+        return arry.join('\n')
     }
 
     async nodeAt(texMath: TexMathEnv, cursorPos: vscode.Position) {

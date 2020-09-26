@@ -6,6 +6,7 @@ import {TexMathEnv} from './texmathenvfinder'
 
 export class CursorRenderer {
     private readonly extension: Extension
+    prevTeXString?: string
     prevAst?: latexParser.LatexAst
 
     constructor(extension: Extension) {
@@ -28,7 +29,7 @@ export class CursorRenderer {
     }
 
     getStartAndEnd(node: latexParser.Node) {
-        if (latexParser.hasContentArray(node)) {
+        if (latexParser.hasContentArray(node) && node.content.length > 0) {
             const sloc = node.content[0].location
             const eloc = node.content[node.content.length-1].location
             const start = { line: sloc.start.line - 1, character: sloc.start.column - 1 }
@@ -91,7 +92,14 @@ export class CursorRenderer {
     }
 
     async nodeAt(texMath: TexMathEnv, cursorPos: vscode.Position) {
-        const ast = await this.extension.pegParser.parseLatex(texMath.texString)
+        let ast: latexParser.LatexAst | undefined
+        if (texMath.texString === this.prevTeXString && this.prevAst) {
+            ast = this.prevAst
+        } else {
+            ast = await this.extension.pegParser.parseLatex(texMath.texString)
+            this.prevAst = ast
+            this.prevTeXString = texMath.texString
+        }
         if (!ast) {
             return
         }

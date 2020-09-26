@@ -27,6 +27,25 @@ export class CursorRenderer {
         return false
     }
 
+    getStartAndEnd(node: latexParser.Node) {
+        if (latexParser.hasContentArray(node)) {
+            const sloc = node.content[0].location
+            const eloc = node.content[node.content.length-1].location
+            const start = { line: sloc.start.line - 1, character: sloc.start.column - 1 }
+            const end = { line: eloc.end.line - 1, character: eloc.end.column - 1 }
+            return {start, end}
+        }
+        if (latexParser.isSubscript(node) || latexParser.isSuperscript(node)) {
+            const start = { line: node.location.start.line - 1, character: node.location.start.column }
+            const end = { line: node.location.end.line - 1, character: node.location.end.column - 1 }
+            return {start, end}
+        } else {
+            const start = { line: node.location.start.line - 1, character: node.location.start.column - 1 }
+            const end = { line: node.location.end.line - 1, character: node.location.end.column - 1 }
+            return {start, end}
+        }
+    }
+
     cursorPosInSnippet(texMath: TexMathEnv, cursorPos: vscode.Position) {
         const line = cursorPos.line - texMath.range.start.line
         const character = line === 0 ? cursorPos.character - texMath.range.start.character : cursorPos.character
@@ -43,17 +62,22 @@ export class CursorRenderer {
             arry[line] = curLine.substring(0, character) + cursor + curLine.substring(character, curLine.length)
             return arry.join('\n')
         }
-        const nodeStart = { line: cursorNode.location.start.line - 1, character: cursorNode.location.start.column - 1 }
-        const nodeEnd = { line: cursorNode.location.end.line - 1, character: cursorNode.location.end.column - 1 }
+        const se = this.getStartAndEnd(cursorNode)
+        if (!se) {
+            return texMath.texString
+        }
+        const nodeStart = se.start
+        const nodeEnd = se.end
+        console.log(JSON.stringify([nodeStart, nodeEnd, texMath.texString]))
         if (nodeStart.line === cursorPosInSnippet.line && cursorPosInSnippet.line === nodeEnd.line) {
             const line = cursorPosInSnippet.line
             const curLine = arry[line]
             arry[line] =
-            curLine.substring(0, nodeStart.character+1)
+            curLine.substring(0, nodeStart.character)
             + '{'
-            + curLine.substring(nodeStart.character+1, cursorPosInSnippet.character)
+            + curLine.substring(nodeStart.character, cursorPosInSnippet.character)
             + cursor
-            + curLine.substring(cursorPosInSnippet.character, nodeEnd.character-1)
+            + curLine.substring(cursorPosInSnippet.character, nodeEnd.character)
             + '}'
             + curLine.substring(nodeEnd.character, curLine.length)
             return arry.join('\n')
@@ -77,7 +101,6 @@ export class CursorRenderer {
         if (!result) {
             return
         }
-        console.log(JSON.stringify(result.node))
         return result.node
     }
 

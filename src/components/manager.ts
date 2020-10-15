@@ -272,17 +272,23 @@ export class Manager {
     }
 
     private findRootFromCurrentRoot(): string | undefined {
+        this.extension.logger.addLogMessage('Try to find root file from the current root.')
         if (!vscode.window.activeTextEditor || this.rootFile === undefined) {
+            this.extension.logger.addLogMessage('Cannot find root file. The active editor is undefined, or the current root file is undefined.')
             return undefined
         }
         if (this.getIncludedTeX().includes(vscode.window.activeTextEditor.document.fileName)) {
+            this.extension.logger.addLogMessage(`Found root file from the current root: ${this.rootFile}`)
             return this.rootFile
         }
+        this.extension.logger.addLogMessage('Cannot find root file from the current root.')
         return undefined
     }
 
     private findRootFromMagic(): string | undefined {
+        this.extension.logger.addLogMessage('Try to find root file from magic comment.')
         if (!vscode.window.activeTextEditor) {
+            this.extension.logger.addLogMessage('Cannot find root file. The active editor is undefined.')
             return undefined
         }
         const regex = /^(?:%\s*!\s*T[Ee]X\sroot\s*=\s*(.*\.tex)$)/m
@@ -291,9 +297,10 @@ export class Manager {
         let result = content.match(regex)
         const fileStack: string[] = []
         if (result) {
+            this.extension.logger.addLogMessage('Found a magic comment. Try to find root file.')
             let file = path.resolve(path.dirname(vscode.window.activeTextEditor.document.fileName), result[1])
             if (!fs.existsSync(file)) {
-                const msg = `Not found root file specified in the magic comment: ${file}`
+                const msg = `Cannot find root file specified in the magic comment: ${file}`
                 this.extension.logger.addLogMessage(msg)
                 throw new Error(msg)
             }
@@ -314,7 +321,7 @@ export class Manager {
                 }
 
                 if (!fs.existsSync(file)) {
-                    const msg = `Not found root file specified in the magic comment: ${file}`
+                    const msg = `Cannot find root file specified in the magic comment: ${file}`
                     this.extension.logger.addLogMessage(msg)
                     throw new Error(msg)
                 }
@@ -322,12 +329,16 @@ export class Manager {
                 result = content.match(regex)
             }
             return file
+        } else {
+            this.extension.logger.addLogMessage('Cannot find a magic comment to find root file.')
         }
         return undefined
     }
 
     private findRootFromActive(): string | undefined {
+        this.extension.logger.addLogMessage('Try to find root file from the active editor.')
         if (!vscode.window.activeTextEditor) {
+            this.extension.logger.addLogMessage('Cannot find root file. The active editor is undefined.')
             return undefined
         }
         const regex = /\\begin{document}/m
@@ -343,6 +354,8 @@ export class Manager {
                 this.extension.logger.addLogMessage(`Found root file from active editor: ${file}`)
                 return file
             }
+        } else {
+            this.extension.logger.addLogMessage('Cannot find root file in the active editor. \\begin{document} not found.')
         }
         return undefined
     }
@@ -366,9 +379,11 @@ export class Manager {
     }
 
     private async findRootInWorkspace(): Promise<string | undefined> {
+        this.extension.logger.addLogMessage('Try to find root file in workspaceRootDir.')
         const regex = /\\begin{document}/m
 
         if (!this.workspaceRootDir) {
+            this.extension.logger.addLogMessage('Cannot find root file in workspaceRootDir. The workspaceRootDir is undefined.')
             return undefined
         }
 
@@ -399,6 +414,7 @@ export class Manager {
                 return candidates[0]
             }
         } catch (e) {}
+        this.extension.logger.addLogMessage('Cannot find root file in workspaceRootDir. No candidates.')
         return undefined
     }
 

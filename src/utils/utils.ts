@@ -81,7 +81,16 @@ export function getLongestBalancedString(s: string): string {
 }
 
 /**
+ * Return the extension of the path converted to lowercase.
+ * @param filePath the path to evaluate.
+ */
+export function extnameLowerCase(filePath: string) {
+    return path.extname(filePath).toLocaleLowerCase()
+}
+
+/**
  * Resolve a relative file path to an absolute path using the prefixes `dirs`.
+ * Returns `undefined` if the file does not exist.
  *
  * @param dirs An array of the paths of directories. They are used as prefixes for `inputFile`.
  * @param inputFile The path of a input file to be resolved.

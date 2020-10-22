@@ -167,7 +167,7 @@ export class Manager {
     }
 
     private inferLanguageId(filename: string): string | undefined {
-        const ext = path.extname(filename).toLocaleLowerCase()
+        const ext = utils.extnameLowerCase(filename)
         if (ext === '.tex') {
             return 'latex'
         } else if (this.jlweaveExt.includes(ext)) {
@@ -671,7 +671,7 @@ export class Manager {
             if (srcFile === inputFile || inputFile in this.cachedContent) {
                 return
             }
-            if (path.extname(inputFile) === '.tex') {
+            if (utils.extnameLowerCase(inputFile) === '.tex') {
                 // Parse tex files as imported subfiles.
                 this.cachedContent[srcFile].children.push({
                     index: Number.MAX_VALUE,
@@ -686,7 +686,7 @@ export class Manager {
         })
 
         ioFiles.output.forEach((outputFile: string) => {
-            if (path.extname(outputFile) === '.aux' && fs.existsSync(outputFile)) {
+            if (utils.extnameLowerCase(outputFile) === '.aux' && fs.existsSync(outputFile)) {
                 this.extension.logger.addLogMessage(`Parse aux file: ${outputFile}`)
                 this.parseAuxFile(fs.readFileSync(outputFile).toString(),
                                   path.dirname(outputFile).replace(outDir, rootDir))
@@ -786,7 +786,7 @@ export class Manager {
 
     private onWatchingNewFile(file: string) {
         this.extension.logger.addLogMessage(`Added to file watcher: ${file}`)
-        if (['.tex', '.bib'].concat(this.weaveExt).includes(path.extname(file)) &&
+        if (['.tex', '.bib'].concat(this.weaveExt).includes(utils.extnameLowerCase(file)) &&
             !file.includes('expl3-code.tex')) {
             this.updateCompleterOnChange(file)
         }
@@ -795,7 +795,7 @@ export class Manager {
     private onWatchedFileChanged(file: string) {
         this.extension.logger.addLogMessage(`File watcher - file changed: ${file}`)
         // It is possible for either tex or non-tex files in the watcher.
-        if (['.tex', '.bib'].concat(this.weaveExt).includes(path.extname(file)) &&
+        if (['.tex', '.bib'].concat(this.weaveExt).includes(utils.extnameLowerCase(file)) &&
             !file.includes('expl3-code.tex')) {
             this.parseFileAndSubs(file, true)
             this.updateCompleterOnChange(file)

@@ -3,7 +3,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 
 import { Extension } from '../../main'
-import { convertFilenameEncoding } from '../../utils/utils'
+import { convertFilenameEncoding, extnameLowerCase } from '../../utils/utils'
 
 const latexPattern = /^Output\swritten\son\s(.*)\s\(.*\)\.$/gm
 const latexFatalPattern = /Fatal error occurred, no output PDF file produced!/gm
@@ -392,7 +392,7 @@ export class Parser {
         const convEnc = configuration.get('message.convertFilenameEncoding') as boolean
         for (const file in diagsCollection) {
             let file1 = file
-            if (['.tex', '.bbx', '.cbx', '.dtx'].includes(path.extname(file))) {
+            if (['.tex', '.bbx', '.cbx', '.dtx'].includes(extnameLowerCase(file))) {
                 // Only report ChkTeX errors on TeX files. This is done to avoid
                 // reporting errors in .sty files, which are irrelevant for most users.
                 if (!fs.existsSync(file1) && convEnc) {

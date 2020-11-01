@@ -90,7 +90,6 @@ export function extnameLowerCase(filePath: string) {
 
 /**
  * Resolve a relative file path to an absolute path using the prefixes `dirs`.
- * Returns `undefined` if the file does not exist.
  *
  * @param dirs An array of the paths of directories. They are used as prefixes for `inputFile`.
  * @param inputFile The path of a input file to be resolved.

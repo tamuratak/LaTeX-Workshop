@@ -57,7 +57,7 @@ async function runTestsOnEachFixture(targetName: 'build' | 'viewer' | 'completio
                 LATEXWORKSHOP_CI_ENABLE_DOCKER: process.argv.includes('--enable-docker') ? '1' : undefined,
                 LATEXWORKSHOP_CI: '1'
             }
-        })
+        }).catch(() => {})
         clearTimeout(nodejsTimeout)
         firstTime = false
     }

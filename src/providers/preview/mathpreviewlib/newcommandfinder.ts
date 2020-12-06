@@ -5,10 +5,12 @@ import * as path from 'path'
 
 import type {Extension} from '../../../main'
 
-export class NewCommandFinder {
-    private readonly extension: Extension
+type IExtension = Pick<Extension, 'logger' | 'manager' | 'pegParser'>
 
-    constructor(extension: Extension) {
+export class NewCommandFinder {
+    private readonly extension: IExtension
+
+    constructor(extension: IExtension) {
         this.extension = extension
     }
 

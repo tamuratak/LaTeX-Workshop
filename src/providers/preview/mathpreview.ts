@@ -16,9 +16,11 @@ import {MathPreviewUtils} from './mathpreviewlib/mathpreviewutils'
 
 export type {TexMathEnv} from './mathpreviewlib/texmathenvfinder'
 
+type IExtension = Pick<Extension, 'logger'>
+type IExtensionArg = Pick<Extension, 'logger' | 'manager' | 'pegParser'>
 
 export class MathPreview {
-    private readonly extension: Extension
+    private readonly extension: IExtension
     private color: string = '#000000'
     private readonly mj: MathJaxPool
     private readonly cursorRenderer: CursorRenderer
@@ -27,7 +29,7 @@ export class MathPreview {
     private readonly hoverPreviewOnRefProvider: HoverPreviewOnRefProvider
     private readonly mputils: MathPreviewUtils
 
-    constructor(extension: Extension) {
+    constructor(extension: IExtensionArg) {
         this.extension = extension
         this.mj = new MathJaxPool()
         vscode.workspace.onDidChangeConfiguration(() => this.getColor())

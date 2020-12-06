@@ -18,13 +18,15 @@ export interface Suggestion extends vscode.CompletionItem {
     type: GlossaryType
 }
 
+type IExtension = Pick<Extension, 'manager' | 'extensionRoot'>
+
 export class Glossary implements IProvider {
-    private readonly extension: Extension
+    private readonly extension: IExtension
     // use object for deduplication
     private readonly glossaries: {[id: string]: Suggestion} = {}
     private readonly acronyms: {[id: string]: Suggestion} = {}
 
-    constructor(extension: Extension) {
+    constructor(extension: IExtension) {
         this.extension = extension
     }
 

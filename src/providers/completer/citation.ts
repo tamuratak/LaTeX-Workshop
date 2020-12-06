@@ -12,14 +12,16 @@ export interface Suggestion extends vscode.CompletionItem {
     position: vscode.Position
 }
 
+type IExtension = Pick<Extension, 'logger' | 'manager' | 'pegParser'>
+
 export class Citation implements IProvider {
-    private readonly extension: Extension
+    private readonly extension: IExtension
     /**
      * Bib entries in each bib `file`.
      */
     private readonly bibEntries: {[file: string]: Suggestion[]} = {}
 
-    constructor(extension: Extension) {
+    constructor(extension: IExtension) {
         this.extension = extension
     }
 

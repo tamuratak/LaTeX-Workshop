@@ -7,13 +7,14 @@ import type {Extension} from '../../../main'
 import type {TexMathEnv} from './texmathenvfinder'
 import type {MathPreviewUtils} from './mathpreviewutils'
 
+type IExtension = Pick<Extension, 'logger'>
 
 export class HoverPreviewOnRefProvider {
-    private readonly extension: Extension
+    private readonly extension: IExtension
     private readonly mj: MathJaxPool
     private readonly mputils: MathPreviewUtils
 
-    constructor(extension: Extension, mj: MathJaxPool, mputils: MathPreviewUtils) {
+    constructor(extension: IExtension, mj: MathJaxPool, mputils: MathPreviewUtils) {
         this.extension = extension
         this.mj = mj
         this.mputils = mputils

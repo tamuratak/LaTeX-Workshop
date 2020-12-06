@@ -4,11 +4,13 @@ import * as fs from 'fs-extra'
 import type {Extension} from '../../main'
 import type {IProvider} from './interface'
 
+type IExtension = Pick<Extension, 'extensionRoot'>
+
 export class DocumentClass implements IProvider {
-    private readonly extension: Extension
+    private readonly extension: IExtension
     private readonly suggestions: vscode.CompletionItem[] = []
 
-    constructor(extension: Extension) {
+    constructor(extension: IExtension) {
         this.extension = extension
     }
 

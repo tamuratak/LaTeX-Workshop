@@ -18,8 +18,10 @@ export interface Suggestion extends vscode.CompletionItem {
     package: string
 }
 
+type IExtension = Pick<Extension, 'completer' | 'manager' | 'extensionRoot'>
+
 export class Environment implements IProvider {
-    private readonly extension: Extension
+    private readonly extension: IExtension
     private defaultEnvsAsName: Suggestion[] = []
     private defaultEnvsAsCommand: Suggestion[] = []
     private defaultEnvsForBegin: Suggestion[] = []
@@ -27,7 +29,7 @@ export class Environment implements IProvider {
     private packageEnvsAsCommand: {[pkg: string]: Suggestion[]} = {}
     private packageEnvsForBegin: {[pkg: string]: Suggestion[]} = {}
 
-    constructor(extension: Extension) {
+    constructor(extension: IExtension) {
         this.extension = extension
     }
 

@@ -22,9 +22,10 @@ export interface Suggestion extends vscode.CompletionItem {
     package: string
 }
 
+type IExtension = Pick<Extension, 'completer' | 'manager' | 'extensionRoot'>
 
 export class Command implements IProvider {
-    private readonly extension: Extension
+    private readonly extension: IExtension
     private readonly environment: Environment
     private readonly commandFinder: CommandFinder
     private readonly surroundCommand: SurroundCommand
@@ -33,7 +34,7 @@ export class Command implements IProvider {
     private defaultSymbols: Suggestion[] = []
     private packageCmds: {[pkg: string]: Suggestion[]} = {}
 
-    constructor(extension: Extension, environment: Environment) {
+    constructor(extension: IExtension, environment: Environment) {
         this.extension = extension
         this.environment = environment
         this.commandFinder = new CommandFinder()

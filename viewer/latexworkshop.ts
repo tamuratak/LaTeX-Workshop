@@ -32,6 +32,7 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
         document.addEventListener('webviewerloaded', () => resolve() )
     })
     private synctexEnabled = true
+    private autoReloadEnabled = true
 
     constructor() {
         this.embedded = window.parent !== window
@@ -78,7 +79,8 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
 
         this.hidePrintButton()
         this.registerKeybinding()
-        this.registerSynctexButton()
+        this.registerSynctexCheckBox()
+        this.registerAutoReloadCheckBox()
         this.startConnectionKeeper()
         this.startRebroadcastingKeyboardEvent()
         this.startSendingState()
@@ -159,7 +161,8 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
             scrollTop: (document.getElementById('viewerContainer') as HTMLElement).scrollTop,
             scrollLeft: (document.getElementById('viewerContainer') as HTMLElement).scrollLeft,
             trim: (document.getElementById('trimSelect') as HTMLSelectElement).selectedIndex,
-            synctexEnabled: this.synctexEnabled
+            synctexEnabled: this.synctexEnabled,
+            autoReloadEnabled: this.autoReloadEnabled
         }
         return pack
     }
@@ -256,6 +259,9 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
                     break
                 }
                 case 'refresh': {
+                    if (!this.autoReloadEnabled) {
+                        break
+                    }
                     const pack = {
                         scale: PDFViewerApplication.pdfViewer.currentScaleValue,
                         scrollMode: PDFViewerApplication.pdfViewer.scrollMode,
@@ -456,28 +462,57 @@ class LateXWorkshopPdfViewer implements ILatexWorkshopPdfViewer {
     }
 
     setSynctex(flag: boolean) {
-        const synctexOn = document.getElementById('synctexOn') as HTMLButtonElement
-        const synctexOff = document.getElementById('synctexOff') as HTMLButtonElement
+        const synctexOff = document.getElementById('synctexOff') as HTMLInputElement
         if (flag) {
-            synctexOn.classList.add('toggled')
-            synctexOff.classList.remove('toggled')
+            if (synctexOff.checked) {
+                synctexOff.checked = false
+            }
             this.synctexEnabled = true
         } else {
-            synctexOn.classList.remove('toggled')
-            synctexOff.classList.add('toggled')
+            if (!synctexOff.checked) {
+                synctexOff.checked = true
+            }
             this.synctexEnabled = false
         }
     }
 
-    registerSynctexButton() {
-        const synctexOn = document.getElementById('synctexOn') as HTMLButtonElement
-        const synctexOff = document.getElementById('synctexOff') as HTMLButtonElement
-        synctexOn.addEventListener('click', () => {
-            this.setSynctex(true)
+    registerSynctexCheckBox() {
+        const synctexOff = document.getElementById('synctexOff') as HTMLInputElement
+        synctexOff.addEventListener('change', () => {
+            this.setSynctex(!synctexOff.checked)
             PDFViewerApplication.secondaryToolbar.close()
         })
-        synctexOff.addEventListener('click', () => {
-            this.setSynctex(false)
+        const synctexOffButton = document.getElementById('synctexOffButton') as HTMLButtonElement
+        synctexOffButton.addEventListener('click', () => {
+            this.setSynctex(!this.synctexEnabled)
+            PDFViewerApplication.secondaryToolbar.close()
+        })
+    }
+
+    setAutoReload(flag: boolean) {
+        const autoReloadOff = document.getElementById('autoReloadOff') as HTMLInputElement
+        if (flag) {
+            if (autoReloadOff.checked) {
+                autoReloadOff.checked = false
+            }
+            this.autoReloadEnabled = true
+        } else {
+            if (!autoReloadOff.checked) {
+                autoReloadOff.checked = true
+            }
+            this.autoReloadEnabled = false
+        }
+    }
+
+    registerAutoReloadCheckBox() {
+        const autoReloadOff = document.getElementById('autoReloadOff') as HTMLInputElement
+        autoReloadOff.addEventListener('change', () => {
+            this.setAutoReload(!autoReloadOff.checked)
+            PDFViewerApplication.secondaryToolbar.close()
+        })
+        const autoReloadOffButton = document.getElementById('autoReloadOffButton') as HTMLButtonElement
+        autoReloadOffButton.addEventListener('click', () => {
+            this.setAutoReload(!this.autoReloadEnabled)
             PDFViewerApplication.secondaryToolbar.close()
         })
     }

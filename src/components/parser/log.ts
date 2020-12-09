@@ -59,7 +59,7 @@ class ParserState {
     }
 }
 
-export class Parser {
+export class LogParser {
     private readonly extension: Extension
     isLaTeXmkSkipped: boolean = false
     private buildLog: LogEntry[] = []

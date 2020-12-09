@@ -3,8 +3,9 @@ import * as path from 'path'
 import * as fs from 'fs'
 
 import type { Extension } from '../main'
-import {Parser as LogParser, LogEntry, LinterLogEntry, DIAGNOSTIC_SEVERITY} from './parser/log'
+import {LogParser, LogEntry, LinterLogEntry, DIAGNOSTIC_SEVERITY} from './parser/log'
 import { convertFilenameEncoding } from '../utils/utils'
+
 
 export class Diagnostic {
 //    private readonly extension: Extension

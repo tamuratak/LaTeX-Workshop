@@ -1,9 +1,7 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
-import * as fs from 'fs'
 
 import type { Extension } from '../../main'
-import { convertFilenameEncoding } from '../../utils/utils'
 
 const latexPattern = /^Output\swritten\son\s(.*)\s\(.*\)\.$/gm
 const latexFatalPattern = /Fatal error occurred, no output PDF file produced!/gm
@@ -28,13 +26,13 @@ const texifyLogLatex = /^running\s(pdf|lua|xe)?latex/
 // const truncatedLine = /(.{77}[^\.](\w|\s|-|\\|\/))(\r\n|\n)/g
 const messageLine = /^l\.\d+\s(.*)$/
 
-const DIAGNOSTIC_SEVERITY: { [key: string]: vscode.DiagnosticSeverity } = {
+export const DIAGNOSTIC_SEVERITY: { [key: string]: vscode.DiagnosticSeverity } = {
     'typesetting': vscode.DiagnosticSeverity.Information,
     'warning': vscode.DiagnosticSeverity.Warning,
     'error': vscode.DiagnosticSeverity.Error,
 }
 
-interface LinterLogEntry {
+export interface LinterLogEntry {
     file: string,
     line: number,
     position: number,
@@ -44,7 +42,7 @@ interface LinterLogEntry {
     text: string
 }
 
-interface LogEntry { type: string, file: string, text: string, line: number }
+export interface LogEntry { type: string, file: string, text: string, line: number }
 
 class ParserState {
     searchEmptyLine = false
@@ -66,8 +64,6 @@ export class Parser {
     isLaTeXmkSkipped: boolean = false
     private buildLog: LogEntry[] = []
     buildLogRaw: string = ''
-    private readonly compilerDiagnostics = vscode.languages.createDiagnosticCollection('LaTeX')
-    private readonly linterDiagnostics = vscode.languages.createDiagnosticCollection('ChkTeX')
 
     constructor(extension: Extension) {
         this.extension = extension
@@ -84,10 +80,15 @@ export class Parser {
             log = this.trimTexify(log)
         }
         if (log.match(latexPattern) || log.match(latexFatalPattern)) {
-            this.parseLaTeX(log, rootFile)
-        } else if (this.latexmkSkipped(log)) {
-            this.isLaTeXmkSkipped = true
+            return this.parseLaTeX(log, rootFile)
+        } else {
+            const buildLog = this.latexmkSkipped(log)
+            if (buildLog) {
+                this.isLaTeXmkSkipped = true
+                return buildLog
+            }
         }
+        return
     }
 
     private trimLaTeXmk(log: string): string {
@@ -134,11 +135,10 @@ export class Parser {
         }
     }
 
-    private latexmkSkipped(log: string): boolean {
+    private latexmkSkipped(log: string) {
         const lines = log.split('\n')
         if (lines[0].match(latexmkUpToDate)) {
-            this.showCompilerDiagnostics()
-            return true
+            return this.buildLog
         }
         return false
     }
@@ -287,7 +287,7 @@ export class Parser {
             this.buildLog.push(state.currentResult)
         }
         this.extension.logger.addLogMessage(`LaTeX log parsed with ${this.buildLog.length} messages.`)
-        this.showCompilerDiagnostics()
+        return this.buildLog
     }
 
     private parseLaTeXFileStack(line: string, fileStack: string[], nested: number): number {
@@ -337,72 +337,7 @@ export class Parser {
             match = re.exec(log)
         }
         this.extension.logger.addLogMessage(`Linter log parsed with ${linterLog.length} messages.`)
-        if (singleFileOriginalPath === undefined) {
-            // A full lint of the project has taken place - clear all previous results.
-            this.linterDiagnostics.clear()
-        } else if (linterLog.length === 0) {
-            // We are linting a single file and the new log is empty for it -
-            // clean existing records.
-            this.linterDiagnostics.set(vscode.Uri.file(singleFileOriginalPath), [])
-        }
-        this.showLinterDiagnostics(linterLog)
+        return linterLog
     }
 
-    private showCompilerDiagnostics() {
-        this.compilerDiagnostics.clear()
-        const diagsCollection: { [key: string]: vscode.Diagnostic[] } = {}
-        for (const item of this.buildLog) {
-            const range = new vscode.Range(new vscode.Position(item.line - 1, 0), new vscode.Position(item.line - 1, 65535))
-            const diag = new vscode.Diagnostic(range, item.text, DIAGNOSTIC_SEVERITY[item.type])
-            diag.source = 'LaTeX'
-            if (diagsCollection[item.file] === undefined) {
-                diagsCollection[item.file] = []
-            }
-            diagsCollection[item.file].push(diag)
-        }
-
-        const configuration = vscode.workspace.getConfiguration('latex-workshop')
-        const convEnc = configuration.get('message.convertFilenameEncoding') as boolean
-        for (const file in diagsCollection) {
-            let file1 = file
-            if (!fs.existsSync(file1) && convEnc) {
-                const f = convertFilenameEncoding(file1)
-                if (f !== undefined) {
-                    file1 = f
-                }
-            }
-            this.compilerDiagnostics.set(vscode.Uri.file(file1), diagsCollection[file])
-        }
-    }
-
-    private showLinterDiagnostics(linterLog: LinterLogEntry[]) {
-        const diagsCollection: { [key: string]: vscode.Diagnostic[] } = {}
-        for (const item of linterLog) {
-            const range = new vscode.Range(new vscode.Position(item.line - 1, item.position - 1),
-                new vscode.Position(item.line - 1, item.position - 1 + item.length))
-            const diag = new vscode.Diagnostic(range, item.text, DIAGNOSTIC_SEVERITY[item.type])
-            diag.code = item.code
-            diag.source = 'ChkTeX'
-            if (diagsCollection[item.file] === undefined) {
-                diagsCollection[item.file] = []
-            }
-            diagsCollection[item.file].push(diag)
-        }
-        const configuration = vscode.workspace.getConfiguration('latex-workshop')
-        const convEnc = configuration.get('message.convertFilenameEncoding') as boolean
-        for (const file in diagsCollection) {
-            let file1 = file
-            if (['.tex', '.bbx', '.cbx', '.dtx'].includes(path.extname(file))) {
-                // Only report ChkTeX errors on TeX files. This is done to avoid
-                // reporting errors in .sty files, which are irrelevant for most users.
-                if (!fs.existsSync(file1) && convEnc) {
-                    const f = convertFilenameEncoding(file1)
-                    if (f !== undefined) {
-                        file1 = f
-                    }
-                }
-                this.linterDiagnostics.set(vscode.Uri.file(file1), diagsCollection[file])
-            }
-        }
-    }
 }

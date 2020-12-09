@@ -350,13 +350,13 @@ export class Section extends vscode.TreeItem {
 }
 
 export class StructureTreeView {
-    private _viewer: vscode.TreeView<Section | undefined>
-    private _treeDataProvider: SectionNodeProvider
+    private readonly _viewer: vscode.TreeView<Section | undefined>
+    private readonly _treeDataProvider: SectionNodeProvider
     private _followCursor: boolean = true
 
 
-    constructor(private extension: Extension) {
-        this._treeDataProvider = this.extension.structureProvider
+    constructor(readonly extension: Extension, treeDataProvider: SectionNodeProvider) {
+        this._treeDataProvider = treeDataProvider
         this._viewer = vscode.window.createTreeView('latex-structure', { treeDataProvider: this._treeDataProvider })
         vscode.commands.registerCommand('latex-structure.toggle-follow-cursor', () => {
            this._followCursor = ! this._followCursor

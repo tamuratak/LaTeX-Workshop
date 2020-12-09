@@ -371,7 +371,7 @@ export class Extension {
         this.envPair = new EnvPair(this)
         this.section = new Section(this)
         this.structureProvider = new SectionNodeProvider(this)
-        this.structureViewer = new StructureTreeView(this)
+        this.structureViewer = new StructureTreeView(this, this.structureProvider)
         this.snippetPanel = new SnippetPanel(this)
         this.pegParser = new PEGParser()
         this.graphicsPreview = new GraphicsPreview(this)

@@ -1,3 +1,4 @@
+import type * as vscode from 'vscode'
 import * as path from 'path'
 import * as workerpool from 'workerpool'
 import type {Proxy} from 'workerpool'
@@ -15,8 +16,15 @@ export class PDFRenderer {
         this.proxy = this.pool.proxy<IPdfRendererWorker>()
     }
 
-    async renderToSVG(pdfPath: string, options: { height: number, width: number, pageNumber: number }): Promise<string> {
-        return (await this.proxy).renderToSvg(pdfPath, options).timeout(3000)
+    async renderToSVG(
+        pdfPath: string,
+        options: { height: number, width: number, pageNumber: number },
+        ctoken: vscode.CancellationToken
+    ): Promise<string> {
+        const proxy = await this.proxy
+        const promise = proxy.renderToSvg(pdfPath, options).timeout(3000)
+        ctoken.onCancellationRequested(() => promise.cancel())
+        return promise
     }
 
     async getNumPages(pdfPath: string): Promise<number> {

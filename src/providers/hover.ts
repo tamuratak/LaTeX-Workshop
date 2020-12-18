@@ -23,7 +23,7 @@ export class HoverProvider implements vscode.HoverProvider {
                 const hover = await this.extension.mathPreview.provideHoverOnTex(document, tex, newCommands)
                 return hover
             }
-            const graphicsHover = await this.extension.graphicsPreview.provideHover(document, position)
+            const graphicsHover = await this.extension.graphicsPreview.provideHover(document, position, ctoken)
             if (graphicsHover) {
                 return graphicsHover
             }

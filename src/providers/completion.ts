@@ -124,7 +124,7 @@ export class Completer implements vscode.CompletionItemProvider {
             if (typeof filePath !== 'string') {
                 return item
             }
-            const rsc = await this.extension.graphicsPreview.renderGraphics(filePath, { height: 190, width: 300 })
+            const rsc = await this.extension.graphicsPreview.renderGraphics(filePath, { height: 190, width: 300 }, token)
             if (rsc === undefined) {
                 return item
             }

@@ -26,7 +26,7 @@ export class GraphicsPreview {
         this.pdfFileCacheMap = new Map<string, {cacheFileName: string, inode: number}>()
     }
 
-    async provideHover(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.Hover | undefined> {
+    async provideHover(document: vscode.TextDocument, position: vscode.Position, ctoken: vscode.CancellationToken): Promise<vscode.Hover | undefined> {
         const pat = /\\includegraphics\s*(?:\[(.*?)\])?\s*\{(.*?)\}/
         const range = document.getWordRangeAtPosition(position, pat)
         if (!range) {
@@ -50,7 +50,7 @@ export class GraphicsPreview {
                 pageNumber = Number(m[1])
             }
         }
-        const dataUrl = await this.renderGraphics(filePath, { height: 230, width: 500, pageNumber })
+        const dataUrl = await this.renderGraphics(filePath, { height: 230, width: 500, pageNumber }, ctoken)
         if (dataUrl !== undefined) {
             const md = new vscode.MarkdownString(`![graphics](${dataUrl})`)
             return new vscode.Hover(md, range)
@@ -64,7 +64,11 @@ export class GraphicsPreview {
         return name
     }
 
-    async renderGraphics(filePath: string, opts: { height: number, width: number, pageNumber?: number }): Promise<string | undefined> {
+    async renderGraphics(
+        filePath: string,
+        opts: { height: number, width: number, pageNumber?: number },
+        ctoken: vscode.CancellationToken
+    ): Promise<string | undefined> {
         const pageNumber = opts.pageNumber || 1
         if (!fs.existsSync(filePath)) {
             return undefined
@@ -87,7 +91,8 @@ export class GraphicsPreview {
             this.pdfFileCacheMap.set(cacheKey, {cacheFileName, inode: curStat.ino})
             const svg0 = await this.pdfRenderer.renderToSVG(
                 filePath,
-                { height: opts.height, width: opts.width, pageNumber }
+                { height: opts.height, width: opts.width, pageNumber },
+                ctoken
             )
             const svg = this.setBackgroundColor(svg0)
             fs.writeFileSync(svgPath, svg)

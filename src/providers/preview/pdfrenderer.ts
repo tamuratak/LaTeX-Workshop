@@ -6,14 +6,14 @@ import type {IPdfRendererWorker} from './pdfrenderer_worker'
 
 export class PDFRenderer {
     private readonly pool: workerpool.WorkerPool
-    private readonly proxy: workerpool.Promise<Proxy<IPdfRendererWorker>>
+    private readonly proxyPromise: workerpool.Promise<Proxy<IPdfRendererWorker>>
 
     constructor() {
         this.pool = workerpool.pool(
             path.join(__dirname, 'pdfrenderer_worker.js'),
             { maxWorkers: 1, workerType: 'process' }
         )
-        this.proxy = this.pool.proxy<IPdfRendererWorker>()
+        this.proxyPromise = this.pool.proxy<IPdfRendererWorker>()
     }
 
     async renderToSVG(
@@ -21,14 +21,14 @@ export class PDFRenderer {
         options: { height: number, width: number, pageNumber: number },
         ctoken: vscode.CancellationToken
     ): Promise<string> {
-        const proxy = await this.proxy
+        const proxy = await this.proxyPromise
         const promise = proxy.renderToSvg(pdfPath, options).timeout(3000)
         ctoken.onCancellationRequested(() => promise.cancel())
         return promise
     }
 
     async getNumPages(pdfPath: string): Promise<number> {
-        return (await this.proxy).getNumPages(pdfPath).timeout(3000)
+        return (await this.proxyPromise).getNumPages(pdfPath).timeout(3000)
     }
 
 }

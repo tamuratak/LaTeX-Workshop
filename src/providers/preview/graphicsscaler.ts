@@ -6,14 +6,14 @@ import type {IGraphicsScalerWorker} from './graphicsscaler_worker'
 
 export class GraphicsScaler {
     private readonly pool: workerpool.WorkerPool
-    private readonly proxy: workerpool.Promise<Proxy<IGraphicsScalerWorker>>
+    private readonly proxyPromise: workerpool.Promise<Proxy<IGraphicsScalerWorker>>
 
     constructor() {
         this.pool = workerpool.pool(
             path.join(__dirname, 'graphicsscaler_worker.js'),
             { maxWorkers: 1, workerType: 'process' }
         )
-        this.proxy = this.pool.proxy<IGraphicsScalerWorker>()
+        this.proxyPromise = this.pool.proxy<IGraphicsScalerWorker>()
     }
 
     async scale(
@@ -21,7 +21,7 @@ export class GraphicsScaler {
         options: { height: number, width: number },
         ctoken: vscode.CancellationToken
     ): Promise<string> {
-        const proxy = await this.proxy
+        const proxy = await this.proxyPromise
         const promise = proxy.scale(filePath, options).timeout(3000)
         ctoken.onCancellationRequested(() => promise.cancel())
         return promise

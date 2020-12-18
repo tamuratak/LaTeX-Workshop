@@ -6,14 +6,14 @@ import type {ISyntaxWorker} from './syntax_worker'
 
 export class UtensilsParser {
     private readonly pool: workerpool.WorkerPool
-    private readonly proxy: workerpool.Promise<Proxy<ISyntaxWorker>>
+    private readonly proxyPromise: workerpool.Promise<Proxy<ISyntaxWorker>>
 
     constructor() {
         this.pool = workerpool.pool(
             path.join(__dirname, 'syntax_worker.js'),
             { minWorkers: 1, maxWorkers: 1, workerType: 'process' }
         )
-        this.proxy = this.pool.proxy<ISyntaxWorker>()
+        this.proxyPromise = this.pool.proxy<ISyntaxWorker>()
     }
 
     /**
@@ -24,15 +24,15 @@ export class UtensilsParser {
      * @return undefined if parsing fails
      */
     async parseLatex(s: string, options?: latexParser.ParserOptions): Promise<latexParser.LatexAst | undefined> {
-        return (await this.proxy).parseLatex(s, options).timeout(3000).catch(() => undefined)
+        return (await this.proxyPromise).parseLatex(s, options).timeout(3000).catch(() => undefined)
     }
 
     async parseLatexPreamble(s: string): Promise<latexParser.AstPreamble> {
-        return (await this.proxy).parseLatexPreamble(s).timeout(500)
+        return (await this.proxyPromise).parseLatexPreamble(s).timeout(500)
     }
 
     async parseBibtex(s: string, options?: bibtexParser.ParserOptions): Promise<bibtexParser.BibtexAst> {
-        return (await this.proxy).parseBibtex(s, options).timeout(30000)
+        return (await this.proxyPromise).parseBibtex(s, options).timeout(30000)
     }
 
 }

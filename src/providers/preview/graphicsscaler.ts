@@ -1,3 +1,4 @@
+import type * as vscode from 'vscode'
 import * as path from 'path'
 import * as workerpool from 'workerpool'
 import type {Proxy} from 'workerpool'
@@ -15,7 +16,14 @@ export class GraphicsScaler {
         this.proxy = this.pool.proxy<IGraphicsScalerWorker>()
     }
 
-    async scale(filePath: string, options: { height: number, width: number }): Promise<string> {
-        return (await this.proxy).scale(filePath, options).timeout(3000)
+    async scale(
+        filePath: string,
+        options: { height: number, width: number },
+        ctoken: vscode.CancellationToken
+    ): Promise<string> {
+        const proxy = await this.proxy
+        const promise = proxy.scale(filePath, options).timeout(3000)
+        ctoken.onCancellationRequested(() => promise.cancel())
+        return promise
     }
 }

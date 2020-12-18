@@ -99,7 +99,7 @@ export class GraphicsPreview {
             return utils.svgToDataUrl(svg)
         }
         if (/\.(bmp|jpg|jpeg|gif|png)$/i.exec(filePath)) {
-            const dataUrl = await this.graphicsScaler.scale(filePath, opts)
+            const dataUrl = await this.graphicsScaler.scale(filePath, opts, ctoken)
             return dataUrl
         }
         return undefined

@@ -93,6 +93,7 @@ function registerLatexWorkshopCommands(extension: Extension) {
     vscode.commands.registerCommand('latex-workshop-dev.parselog', () => extension.commander.devParseLog())
     vscode.commands.registerCommand('latex-workshop-dev.parsetex', () => extension.commander.devParseTeX())
     vscode.commands.registerCommand('latex-workshop-dev.parsebib', () => extension.commander.devParseBib())
+    vscode.commands.registerCommand('latex-workshop-dev.devcommand', () => extension.commander.devCommand())
 
     vscode.commands.registerCommand('latex-workshop.shortcut.item', () => extension.commander.insertSnippet('item'))
     vscode.commands.registerCommand('latex-workshop.shortcut.emph', () => extension.commander.toggleSelectedKeyword('emph'))

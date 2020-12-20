@@ -408,6 +408,11 @@
         "category": "LaTeX Workshop DevTools"
       },
       {
+        "command": "latex-workshop-dev.devcommand",
+        "title": "Dev command",
+        "category": "LaTeX Workshop DevTools"
+      },
+      {
         "command": "latex-workshop.texdoc",
         "title": "Show package documentation",
         "category": "LaTeX Workshop"

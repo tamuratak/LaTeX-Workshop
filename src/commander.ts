@@ -615,6 +615,15 @@ export class Commander {
         vscode.workspace.openTextDocument({content: JSON.stringify(ast, null, 2), language: 'json'}).then(doc => vscode.window.showTextDocument(doc))
     }
 
+    devCommand() {
+        for (const editor of vscode.window.visibleTextEditors) {
+            console.log(editor.document.fileName)
+            if (editor.document.fileName.startsWith('extension-output')) {
+                vscode.languages.setTextDocumentLanguage(editor.document, 'typescript')
+            }
+        }
+    }
+
     texdoc(pkg?: string) {
         this._texdoc.texdoc(pkg)
     }

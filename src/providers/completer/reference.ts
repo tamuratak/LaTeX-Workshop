@@ -155,14 +155,14 @@ export class Reference implements IProvider {
         const useLabelKeyVal = configuration.get('intellisense.label.keyval')
         const refs: vscode.CompletionItem[] = []
         let label = ''
-        if (latexParser.isCommand(node) && node.name === 'label' && node.args.length > 0) {
+        if (latexParser.isLabelCommand(node) && node.name === 'label') {
             // \label{some-text}
-            label = (node.args.filter(latexParser.isGroup)[0].content[0] as latexParser.TextString).content
+            label = node.label
         } else if (latexParser.isTextString(node) && node.content === 'label=' && useLabelKeyVal && nextNode !== undefined) {
             // label={some=text}
             label = ((nextNode as latexParser.Group).content[0] as latexParser.TextString).content
         }
-        if (label !== '' && (latexParser.isCommand(node) || latexParser.isTextString(node))) {
+        if (label !== '' && (latexParser.isLabelCommand(node) || latexParser.isTextString(node))) {
             refs.push({
                 label,
                 kind: vscode.CompletionItemKind.Reference,

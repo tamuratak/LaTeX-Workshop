@@ -52,15 +52,19 @@ export class Builder {
      */
     kill() {
         const proc = this.currentProcess
+        const configuration = vscode.workspace.getConfiguration('latex-workshop')
         if (proc) {
             const pid = proc.pid
-            if (process.platform === 'linux' || process.platform === 'darwin') {
-                cp.exec(`pkill -P ${pid}`)
-            } else if (process.platform === 'win32') {
-                cp.exec(`taskkill /F /T /PID ${pid}`)
+            if (configuration.get('latex.build.killChildProcesses.enabled', true)) {
+                this.extension.logger.addLogMessage(`Kill the child processes of the current process: ${pid}`)
+                if (process.platform === 'linux' || process.platform === 'darwin') {
+                    cp.exec(`pkill -P ${pid}`)
+                } else if (process.platform === 'win32') {
+                    cp.exec(`taskkill /F /T /PID ${pid}`)
+                }
             }
             proc.kill()
-            this.extension.logger.addLogMessage(`Kill the current process. PID: ${pid}.`)
+            this.extension.logger.addLogMessage(`Kill the current process. PID: ${pid}`)
         } else {
             this.extension.logger.addLogMessage('LaTeX build process to kill is not found.')
         }

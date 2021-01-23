@@ -5,6 +5,7 @@ import * as tmpFile from 'tmp'
 import type { Extension } from '../../main'
 import { PDFRenderer } from './pdfrenderer'
 import { GraphicsScaler } from './graphicsscaler'
+import * as utils from '../../utils/utils'
 
 
 export class GraphicsPreview {
@@ -38,7 +39,7 @@ export class GraphicsPreview {
         if (!execArray || !relPath) {
             return undefined
         }
-        const filePath = this.findFilePath(relPath)
+        const filePath = this.findFilePath(relPath, document)
         if (filePath === undefined) {
             return undefined
         }
@@ -102,7 +103,7 @@ export class GraphicsPreview {
         return svg.replace(/(<\/svg:style>)/, 'svg { background-color: white };$1')
     }
 
-    private findFilePath(relPath: string): string | undefined {
+    private findFilePath(relPath: string, document: vscode.TextDocument): string | undefined {
         if (path.isAbsolute(relPath)) {
             if (fs.existsSync(relPath)) {
                 return relPath
@@ -110,6 +111,19 @@ export class GraphicsPreview {
                 return undefined
             }
         }
+        const graphicsPathArray = this.getGraphicsPath(document)
+        for (const graphicsPath of graphicsPathArray) {
+            let filePath: string
+            if (path.isAbsolute(graphicsPath)) {
+                filePath = path.join(graphicsPath, relPath)
+            } else {
+                filePath = path.join(path.dirname(document.uri.fsPath), graphicsPath, relPath)
+            }
+            if (fs.existsSync(filePath)) {
+                return filePath
+            }
+        }
+
         const rootDir = this.extension.manager.rootDir
         if (rootDir === undefined) {
             return undefined
@@ -125,6 +139,27 @@ export class GraphicsPreview {
             }
         }
         return undefined
+    }
+
+    getGraphicsPath(document: vscode.TextDocument): string[] {
+        const filePath = document.uri.fsPath
+        const content = utils.stripComments(fs.readFileSync(filePath, 'utf-8'), '%')
+        const regex = /\\graphicspath{[\s\n]*((?:{[^{}]*}[\s\n]*)*)}/g
+        const result: string[] = []
+        let match: RegExpExecArray | null
+        do {
+            match = regex.exec(content)
+            if (match) {
+                for (const dir of match[1].split(/\{|\}/).filter(s => s.replace(/^\s*$/, ''))) {
+                    if (result.includes(dir)) {
+                        continue
+                    } else {
+                        result.push(dir)
+                    }
+                }
+            }
+        } while (match)
+        return result
     }
 
     getPdfNumPages(pdfPath: string): Promise<number> {

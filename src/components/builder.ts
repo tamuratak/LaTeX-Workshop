@@ -63,7 +63,13 @@ export class Builder {
                 }
             } catch (e) {
                 if (e instanceof Error) {
-                    this.extension.logger.addLogMessage(`Error when killing child processes of the current process. ${e.message}`)
+                    this.extension.logger.addLogMessage(`Error when killing child processes of the current process: ${e.message}`)
+                }
+                if (e.stderr && e.stderr.toString) {
+                    this.extension.logger.addLogMessage(`Stderr: ${e.stderr.toString()}`)
+                }
+                if (e.stdout && e.stdout.toString) {
+                    this.extension.logger.addLogMessage(`Stdout: ${e.stdout.toString()}`)
                 }
             } finally {
                 proc.kill()

@@ -147,20 +147,31 @@ export function activate(context: vscode.ExtensionContext) {
     registerLatexWorkshopCommands(extension)
 
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument( (e: vscode.TextDocument) => {
-        if (extension.manager.hasTexId(e.languageId)) {
-            extension.linter.lintRootFileIfEnabled()
+        try {
+            if (extension.manager.hasTexId(e.languageId)) {
+                extension.linter.lintRootFileIfEnabled()
 
-            extension.structureProvider.refresh()
-            extension.structureProvider.update()
-            const configuration = vscode.workspace.getConfiguration('latex-workshop')
-            if (configuration.get('latex.autoBuild.run') as string === BuildEvents.onSave) {
-                if (extension.builder.disableBuildAfterSave) {
-                    extension.logger.addLogMessage('Auto Build Run is temporarily disabled during a second.')
-                    return
+                extension.structureProvider.refresh()
+                extension.structureProvider.update()
+                const configuration = vscode.workspace.getConfiguration('latex-workshop')
+                if (configuration.get('latex.autoBuild.run') as string === BuildEvents.onSave) {
+                    if (extension.builder.disableBuildAfterSave) {
+                        extension.logger.addLogMessage('Auto Build Run is temporarily disabled during a second.')
+                        return
+                    }
+                    extension.logger.addLogMessage(`Auto build started on saving file: ${e.fileName}`)
+                    extension.commander.build(true)
                 }
-                extension.logger.addLogMessage(`Auto build started on saving file: ${e.fileName}`)
-                extension.commander.build(true)
             }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                extension.logger.addLogMessage('Error when DidSaveTextDocument event occurred.')
+                extension.logger.addLogMessage(err.message)
+                if (err.stack) {
+                    extension.logger.addLogMessage(err.stack)
+                }
+            }
+            throw err
         }
     }))
 

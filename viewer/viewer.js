@@ -8761,7 +8761,7 @@ class PDFSidebar {
       return;
     }
 
-    if (!this._switchView(view, true)) {
+    if (!this._switchView(view, false)) {
       this._dispatchEvent();
     }
   }

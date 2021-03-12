@@ -54,6 +54,10 @@ export class Builder {
         const proc = this.currentProcess
         if (proc) {
             const pid = proc.pid
+            if (proc.exitCode !== null) {
+                this.extension.logger.addLogMessage(`The current build process already stopped. PID: ${pid}.`)
+                return
+            }
             try {
                 this.extension.logger.addLogMessage(`Kill child processes of the current process. PPID: ${pid}`)
                 if (process.platform === 'linux' || process.platform === 'darwin') {
@@ -66,8 +70,12 @@ export class Builder {
                     this.extension.logger.addLogMessage(`Error when killing child processes of the current process. ${e.message}`)
                 }
             } finally {
-                proc.kill()
-                this.extension.logger.addLogMessage(`Kill the current process. PID: ${pid}`)
+                const ret = proc.kill()
+                if (ret) {
+                    this.extension.logger.addLogMessage(`Succeeded in killing the current process. PID: ${pid}`)
+                } else {
+                    this.extension.logger.addLogMessage(`Failed to kill the current process. PID: ${pid}`)
+                }
             }
         } else {
             this.extension.logger.addLogMessage('LaTeX build process to kill is not found.')
